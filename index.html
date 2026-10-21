@@ -1,0 +1,436 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Rate Cascade</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a sticky rate lever on top, then one vertical rail that runs from the policy rate down through each market to households. */
+:root {
+  --bg: #F1F4F8;
+  --panel: #FFFFFF;
+  --ink: #0E1A2B;
+  --muted: #566377;
+  --line: #D6DDE7;
+  --track: #E6EBF2;
+  --inc: #2B4BDB;
+  --dec: #A8510F;
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0B111B; --panel: #131C2A; --ink: #E7ECF4; --muted: #94A1B6;
+    --line: #25314A; --track: #1E293C; --inc: #8CA2FF; --dec: #F2A15F;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0B111B; --panel: #131C2A; --ink: #E7ECF4; --muted: #94A1B6;
+  --line: #25314A; --track: #1E293C; --inc: #8CA2FF; --dec: #F2A15F;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  padding-block: 28px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+  z-index: 30; background: var(--bg);
+}
+.page { max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 5.5vw, 3rem); line-height: 1.05; margin: 0; letter-spacing: -0.02em; text-wrap: balance; }
+.intro { max-width: 62ch; color: var(--muted); margin: 10px 0 0; }
+.tag { font-family: var(--font-data); font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-top: 12px; }
+
+/* Control bar */
+.ctl {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  padding: 12px 16px 12px; display: flex; flex-direction: column; gap: 8px;
+  box-shadow: 0 6px 18px -12px rgba(10, 20, 40, 0.35);
+}
+.ctl-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.lbl { font-family: var(--font-data); font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); display: block; }
+.rates { font-family: var(--font-data); font-size: 17px; font-variant-numeric: tabular-nums; }
+.rates b { color: var(--inc); font-weight: 500; }
+.d-out { font-family: var(--font-display); font-weight: 700; font-size: 1.9rem; line-height: 1; font-variant-numeric: tabular-nums; color: var(--inc); }
+input[type="range"] { width: 100%; accent-color: var(--inc); margin: 2px 0; height: 28px; }
+.presets { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+.presets button {
+  flex: 0 0 auto; font-family: var(--font-data); font-size: 12.5px; color: var(--ink);
+  background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 5px 10px; cursor: pointer;
+}
+.presets button:hover { border-color: var(--inc); }
+.presets button[aria-pressed="true"] { background: var(--inc); border-color: var(--inc); color: var(--panel); }
+button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--inc); outline-offset: 2px; }
+
+/* Assumptions */
+.assume { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+.assume summary { cursor: pointer; font-weight: 600; }
+.assume-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px 28px; margin-top: 14px; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field label { font-weight: 600; }
+.field .hint { color: var(--muted); font-size: 13px; margin: 0; }
+.field input[type="number"] {
+  width: 120px; font-family: var(--font-data); font-size: 15px; padding: 6px 8px;
+  background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 6px;
+}
+.field output { font-family: var(--font-data); }
+
+/* Summary */
+.reading { margin: 0; padding: 4px 0; font-size: 16.5px; max-width: 80ch; text-wrap: pretty; }
+.reading strong { font-weight: 600; }
+.legend { color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; }
+.legend i { display: inline-block; width: 18px; height: 8px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+.legend .inc, .track i.inc { background: var(--inc); }
+.legend .dec, .track i.dec { background: var(--dec); }
+
+/* Cascade rail */
+.cascade { position: relative; display: flex; flex-direction: column; gap: 18px; padding-left: 36px; }
+.cascade::before { content: ""; position: absolute; left: 8px; top: 8px; bottom: 8px; width: 2px; background: var(--line); }
+.start-node, .card { position: relative; }
+.card::before {
+  content: ""; position: absolute; left: -35px; top: 20px; width: 14px; height: 14px; border-radius: 50%;
+  background: var(--bg); border: 3px solid var(--inc);
+}
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px 8px; min-width: 0; }
+.card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px 16px; flex-wrap: wrap; }
+.eyebrow { font-family: var(--font-data); font-size: 11.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+.card h2 { font-family: var(--font-display); font-weight: 600; font-size: 1.4rem; margin: 2px 0 0; letter-spacing: -0.01em; }
+.pill { font-family: var(--font-data); font-size: 13px; border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; display: inline-flex; gap: 8px; background: var(--bg); white-space: nowrap; }
+.pill b { font-weight: 500; font-variant-numeric: tabular-nums; }
+.blurb { color: var(--muted); margin: 8px 0 10px; max-width: 70ch; font-size: 14.5px; text-wrap: pretty; }
+.row {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(110px, 230px) 92px;
+  gap: 4px 18px; align-items: center; padding: 11px 0; border-top: 1px solid var(--line);
+}
+.name { font-weight: 600; }
+.sub { font-family: var(--font-data); font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.track { position: relative; height: 10px; background: var(--track); border-radius: 5px; overflow: hidden; }
+.track::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--muted); opacity: 0.6; }
+.track i { position: absolute; top: 0; bottom: 0; display: block; }
+.delta { font-family: var(--font-data); font-size: 14px; text-align: right; font-variant-numeric: tabular-nums; }
+.inc-t, .delta.inc, .pill b.inc { color: var(--inc); }
+.delta.dec, .pill b.dec { color: var(--dec); }
+
+.foot { color: var(--muted); font-size: 13px; max-width: 80ch; border-top: 1px solid var(--line); padding-top: 14px; }
+.foot p { margin: 0 0 8px; }
+
+@media (max-width: 600px) {
+  .row { grid-template-columns: minmax(0, 1fr) auto; }
+  .track { grid-column: 1 / -1; grid-row: 2; }
+  .card { padding: 14px 14px 6px; }
+  .cascade { padding-left: 30px; }
+  .card::before { left: -29px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .track i { transition: width 0.12s ease-out; }
+}
+</style>
+
+<div class="page">
+  <header>
+    <h1>Rate Cascade</h1>
+    <p class="intro">Move the federal funds rate and follow the change through money markets, bonds, stocks, currencies, commodities and derivatives, then down to the loans and spending of households.</p>
+    <div class="tag">Stylized model · rules of thumb, not forecasts</div>
+  </header>
+
+  <section class="ctl" id="control" aria-label="Rate controls">
+    <div class="ctl-top">
+      <div>
+        <span class="lbl">Fed funds target</span>
+        <span class="rates"><span id="rFrom">4.00%</span> → <b id="rTo">4.25%</b></span>
+      </div>
+      <output id="dOut" class="d-out" for="bp">+25 bp</output>
+    </div>
+    <input type="range" id="bp" min="-200" max="300" step="5" value="25" aria-label="Change in the federal funds rate, in basis points">
+    <div class="presets" id="presets" role="group" aria-label="Preset rate changes"></div>
+  </section>
+
+  <details class="assume" open>
+    <summary>Assumptions</summary>
+    <div class="assume-grid">
+      <div class="field">
+        <label for="start">Starting target rate (%)</label>
+        <input type="number" id="start" min="0.25" max="10" step="0.25" value="4.00">
+        <p class="hint">An example value. Enter the current target to match today. Other rates in the model are built from it.</p>
+      </div>
+      <div class="field">
+        <label for="priced">Already priced in: <output id="pricedOut" for="priced">0%</output></label>
+        <input type="range" id="priced" min="0" max="100" step="5" value="0" aria-label="Share of the move markets already expected">
+        <p class="hint">Markets move on the surprise. Bond, stock, dollar, commodity and derivatives effects shrink as more of the move was expected. Money market and household loan rates follow the actual change.</p>
+      </div>
+    </div>
+  </section>
+
+  <p class="reading" id="reading" aria-live="polite"></p>
+  <div class="legend"><span><i class="inc"></i>Increase</span><span><i class="dec"></i>Decrease</span><span>Bars show direction and relative size, not good or bad. Full bar is roughly a 150 bp surprise.</span></div>
+
+  <div class="cascade" id="cascade"></div>
+
+  <footer class="foot">
+    <p>Sensitivities are simplified: bond prices come from pricing a par bond at the new yield, stock moves from a discount-rate valuation (price proportional to 1 / (discount rate minus growth)), and the rest from fixed pass-through ratios. Starting yields, spreads and loan rates are illustrative.</p>
+    <p>Not modeled: changes in earnings, growth expectations, central bank guidance and global rate moves. Household effects are shown for new loans; fixed-rate loans already in place do not reprice, and spending responds over roughly 12 to 18 months.</p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var S = { bp: 25, start: 4.0, priced: 0 };
+
+  function num(x, dp) { return Number(Math.abs(x).toFixed(dp)); }
+  function sgn(x, dp, suf) {
+    var r = num(x, dp);
+    if (r === 0) return '0' + (suf || '');
+    return (x > 0 ? '+' : '−') + r.toFixed(dp) + (suf || '');
+  }
+  function f(x, dp) { return x.toFixed(dp == null ? 2 : dp); }
+  function usd(x) { return '$' + Math.round(Math.abs(x)).toLocaleString('en-US'); }
+  function usdMo(x) {
+    var r = Math.round(Math.abs(x));
+    if (r === 0) return '$0/mo';
+    return (x > 0 ? '+' : '−') + '$' + r.toLocaleString('en-US') + '/mo';
+  }
+  function dir(v) { return v > 1e-9 ? 'inc' : v < -1e-9 ? 'dec' : ''; }
+
+  function bondPrice(c, y, n) {
+    var cc = c / 200, yy = y / 200, N = n * 2, p = 0, k;
+    for (k = 1; k <= N; k++) p += cc * 100 / Math.pow(1 + yy, k);
+    return p + 100 / Math.pow(1 + yy, N);
+  }
+  function modDur(y, n) {
+    var up = bondPrice(y, y + 0.01, n), dn = bondPrice(y, y - 0.01, n);
+    return (dn - up) / (2 * 100 * 0.0001);
+  }
+  function pmt(P, rate, months) {
+    var r = rate / 1200;
+    if (r <= 0) return P / months;
+    return P * r / (1 - Math.pow(1 + r, -months));
+  }
+
+  function model(S) {
+    var d = S.bp / 100, p = S.priced / 100, s = d * (1 - p), st = S.start;
+    var pos = function (x) { return Math.max(0.05, x); };
+    var cards = [];
+    var out = {};
+
+    // 1. Money markets
+    var mmDefs = [
+      ['Federal funds (overnight bank lending)', st, 1.0],
+      ['3-month Treasury bill', st - 0.10, 0.95],
+      ['Commercial paper (30-day, AA)', st + 0.10, 0.95],
+      ['Money market fund yield', st - 0.15, 0.90]
+    ];
+    var mmRows = mmDefs.map(function (m) {
+      var b = pos(m[1]), a = pos(m[1] + m[2] * d);
+      return { label: m[0], sub: f(b) + '% → ' + f(a) + '%', text: sgn(a - b, 2, ' pp'), v: a - b, a: a };
+    });
+    cards.push({
+      id: 'money', mode: 'card', eyebrow: 'Immediately · the policy rate passes straight through',
+      title: 'Money markets',
+      blurb: 'Overnight lending between banks adjusts at once. Treasury bills, commercial paper and money market funds reprice in step.',
+      headline: ['Overnight rate', f(mmRows[0].a) + '%', dir(d)], rows: mmRows
+    });
+
+    // 2. Bonds
+    var bDefs = [['2-year Treasury', 2, Math.max(0.1, st - 0.15), 0.80], ['10-year Treasury', 10, st + 0.35, 0.40], ['30-year Treasury', 30, st + 0.70, 0.25]];
+    var dy10 = 0.4 * s;
+    var bRows = bDefs.map(function (b) {
+      var y0 = b[2], y1 = pos(y0 + b[3] * s), p1 = bondPrice(y0, y1, b[1]), v = p1 - 100;
+      return { label: b[0], sub: 'Yield ' + f(y0) + '% → ' + f(y1) + '% · price 100 → ' + f(p1) + ' · duration ' + f(modDur(y0, b[1]), 1) + ' yrs', text: sgn(v, 2, '%'), v: v };
+    });
+    cards.push({
+      id: 'bonds', mode: 'card', eyebrow: 'Via yields · longer maturities carry more price risk',
+      title: 'Bond markets',
+      blurb: 'Existing bonds lose value as yields adjust to the new rate. The 10-, 20- and 30-year maturities are hit hardest because their prices are the most sensitive to rates.',
+      headline: ['30-yr price', sgn(bRows[2].v, 2, '%'), dir(bRows[2].v)], rows: bRows
+    });
+
+    // 3. Equities
+    var eDefs = [['Value and dividend payers', 7.0], ['Broad market (S&amp;P 500)', 5.0], ['Growth stocks', 3.5], ['Long-duration growth (distant earnings)', 2.5]];
+    var eRows = eDefs.map(function (e) {
+      var v = (e[1] / (e[1] + dy10) - 1) * 100;
+      return { label: e[0], sub: 'Discount rate − growth ' + f(e[1], 1) + '% · duration ≈ ' + Math.round(100 / e[1]) + ' yrs', text: sgn(v, 2, '%'), v: v };
+    });
+    cards.push({
+      id: 'equity', mode: 'card', eyebrow: 'Via the discount rate · distant earnings lose the most',
+      title: 'Equity markets',
+      blurb: 'A higher discount rate lowers the present value of future earnings. Growth stocks, which depend on cash flows far in the future, are hit hardest.',
+      headline: ['Growth', sgn(eRows[2].v, 2, '%'), dir(eRows[2].v)], rows: eRows
+    });
+
+    // 4. FX
+    var u = 1.6 * s;
+    var fxRows = [
+      ['Dollar index (DXY)', 1.0, 'Dollar vs a basket of currencies'],
+      ['Euro vs dollar', -0.9, 'EUR/USD'],
+      ['Yen vs dollar', -1.2, 'JPY per USD moves the other way'],
+      ['Emerging-market currencies vs dollar', -1.5, 'Most exposed to capital leaving']
+    ].map(function (x) {
+      var v = u * x[1];
+      return { label: x[0], sub: x[2], text: sgn(v, 2, '%'), v: v };
+    });
+    cards.push({
+      id: 'fx', mode: 'card', eyebrow: 'Via capital flows · higher yields attract dollars',
+      title: 'Currency markets',
+      blurb: 'Higher U.S. rates draw foreign capital looking for better returns. Demand for dollars rises and the dollar appreciates against other currencies.',
+      headline: ['Dollar index', sgn(u, 2, '%'), dir(u)], rows: fxRows
+    });
+
+    // 5. Commodities
+    var cRows = [['Crude oil', -2.0], ['Gold', -2.5], ['Copper', -1.8]].map(function (c) {
+      var v = u * c[1];
+      return { label: c[0], sub: 'Dollar-priced · sensitivity ' + sgn(c[1], 1, '×') + ' the dollar move', text: sgn(v, 2, '%'), v: v };
+    });
+    cards.push({
+      id: 'commod', mode: 'card', eyebrow: 'Via the dollar · pricier for foreign buyers',
+      title: 'Commodity markets',
+      blurb: 'A stronger dollar makes dollar-priced commodities more expensive for foreign buyers. Demand softens and prices drift lower.',
+      headline: ['Gold', sgn(cRows[1].v, 2, '%'), dir(cRows[1].v)], rows: cRows
+    });
+
+    // 6. Derivatives
+    var vixD = (s > 0 ? 4.0 : 1.5) * s, vixB = 16, vixA = Math.max(9, vixB + vixD);
+    var swD = 0.55 * s, swB = st + 0.15, swA = pos(swB + swD);
+    var igD = (s > 0 ? 12 : 6) * s, igB = 95, igA = Math.max(40, igB + igD);
+    var hyD = (s > 0 ? 48 : 24) * s, hyB = 340, hyA = Math.max(180, hyB + hyD);
+    var dRows = [
+      { label: 'Equity volatility (VIX)', sub: f(vixB, 1) + ' → ' + f(vixA, 1) + ' pts', text: sgn(vixA - vixB, 1, ' pts'), v: vixA - vixB },
+      { label: '5-year interest rate swap', sub: f(swB) + '% → ' + f(swA) + '%', text: sgn((swA - swB) * 100, 0, ' bp'), v: swA - swB },
+      { label: 'Investment-grade credit spread', sub: Math.round(igB) + ' → ' + Math.round(igA) + ' bp', text: sgn(igA - igB, 0, ' bp'), v: igA - igB },
+      { label: 'High-yield credit spread', sub: Math.round(hyB) + ' → ' + Math.round(hyA) + ' bp', text: sgn(hyA - hyB, 0, ' bp'), v: hyA - hyB }
+    ];
+    cards.push({
+      id: 'deriv', mode: 'row', eyebrow: 'Via repricing · volatility, swaps and credit spreads',
+      title: 'Derivatives and credit',
+      blurb: 'Traders reposition and options volatility can jump. Interest rate swaps are repriced, and credit spreads can widen if higher rates strain corporate balance sheets.',
+      headline: ['High-yield spread', sgn(hyA - hyB, 0, ' bp'), dir(hyA - hyB)], rows: dRows
+    });
+
+    // 7. Households and business
+    var mB = 6.25, mA = Math.max(0.5, mB + dy10);
+    var mP0 = pmt(400000, mB, 360), mP1 = pmt(400000, mA, 360);
+    var aB = 7.10, aA = Math.max(0.5, aB + 0.7 * d);
+    var aP0 = pmt(35000, aB, 60), aP1 = pmt(35000, aA, 60);
+    var cB = 21.0, cA = Math.max(5, cB + d);
+    var cI0 = 6000 * cB / 1200, cI1 = 6000 * cA / 1200;
+    var y10b = st + 0.35, bbB = y10b + 1.30, bbA = bbB + dy10 + igD / 100;
+    var sB = pos(st - 0.35), sA = pos(sB + 0.8 * d);
+    var sI0 = 20000 * sB / 1200, sI1 = 20000 * sA / 1200;
+    var hhRows = [
+      { label: 'New 30-year mortgage', sub: f(mB) + '% → ' + f(mA) + '% · $400k loan ' + usd(mP0) + ' → ' + usd(mP1) + '/mo', text: usdMo(mP1 - mP0), v: mA - mB },
+      { label: 'New 5-year auto loan', sub: f(aB) + '% → ' + f(aA) + '% · $35k loan ' + usd(aP0) + ' → ' + usd(aP1) + '/mo', text: usdMo(aP1 - aP0), v: aA - aB },
+      { label: 'Credit card balance', sub: f(cB, 1) + '% → ' + f(cA, 1) + '% APR · $6k balance ' + usd(cI0) + ' → ' + usd(cI1) + '/mo interest', text: usdMo(cI1 - cI0), v: cA - cB },
+      { label: 'Company borrowing (BBB bond yield)', sub: f(bbB) + '% → ' + f(bbA) + '% · Treasury yield plus wider spread', text: sgn((bbA - bbB) * 100, 0, ' bp'), v: bbA - bbB },
+      { label: 'High-yield savings account', sub: f(sB) + '% → ' + f(sA) + '% · $20k earns ' + usd(sI0) + ' → ' + usd(sI1) + '/mo', text: usdMo(sI1 - sI0), v: sA - sB }
+    ];
+    cards.push({
+      id: 'borrow', mode: 'card', eyebrow: 'Via lending rates · what borrowers and savers face',
+      title: 'Borrowing and saving',
+      blurb: 'Lenders pass the new rate on. Variable-rate debt such as credit cards reprices within a billing cycle or two. New mortgages follow the 10-year yield. Savers earn more.',
+      headline: ['New mortgage', usdMo(mP1 - mP0), dir(mP1 - mP0)], rows: hhRows
+    });
+
+    var spRows = [
+      ['Home building and sales', -6.0, 'Most sensitive to mortgage rates'],
+      ['Vehicle purchases', -3.5, 'Financed with auto loans'],
+      ['Other big-ticket goods', -2.5, 'Furniture, appliances, electronics'],
+      ['Business equipment investment', -2.0, 'Funded with corporate debt'],
+      ['Everyday goods and services', -0.3, 'Least sensitive to rates'],
+      ['Total consumer spending', -0.5, 'Weighted across categories']
+    ].map(function (x) {
+      var v = x[1] * d;
+      return { label: x[0], sub: x[2], text: sgn(v, 1, '%'), v: v };
+    });
+    cards.push({
+      id: 'spend', mode: 'card', eyebrow: 'Via demand · higher borrowing costs slow purchases',
+      title: 'Spending',
+      blurb: 'Costlier credit pushes people and companies to delay big purchases and investment. Illustrative response after 12 to 18 months, per 1 percentage point of change in the policy rate.',
+      headline: ['Total spending', sgn(spRows[5].v, 1, '%'), dir(spRows[5].v)], rows: spRows
+    });
+
+    out.cards = cards;
+    out.s = s;
+    out.sum = { dy10: dy10 * 100, spx: eRows[1].v, usd: u, gold: cRows[1].v, mort: mP1 - mP0 };
+    return out;
+  }
+
+  function scales(S) {
+    var hi = model({ bp: 150, start: S.start, priced: 0 }), lo = model({ bp: -150, start: S.start, priced: 0 });
+    return hi.cards.map(function (c, i) {
+      var l = lo.cards[i];
+      var per = c.rows.map(function (r, j) { return Math.max(Math.abs(r.v), Math.abs(l.rows[j].v), 1e-9); });
+      var all = Math.max.apply(null, per);
+      return c.mode === 'row' ? per : c.rows.map(function () { return all; });
+    });
+  }
+
+  function rowHTML(r, sc) {
+    var w = Math.abs(r.v) < 1e-9 ? 0 : Math.min(50, Math.abs(r.v) / sc * 50);
+    var d = dir(r.v);
+    return '<div class="row"><div class="lab"><div class="name">' + r.label + '</div><div class="sub">' + r.sub + '</div></div>' +
+      '<div class="track" aria-hidden="true"><i class="' + d + '" style="' + (r.v < 0 ? 'right' : 'left') + ':50%;width:' + w + '%"></i></div>' +
+      '<div class="delta ' + d + '">' + r.text + '</div></div>';
+  }
+
+  function render() {
+    var m = model(S), sc = scales(S);
+    $('cascade').innerHTML = m.cards.map(function (c, i) {
+      return '<section class="card" id="' + c.id + '"><div class="card-head"><div><div class="eyebrow">' + c.eyebrow + '</div><h2>' + c.title + '</h2></div>' +
+        '<div class="pill"><span>' + c.headline[0] + '</span><b class="' + c.headline[2] + '">' + c.headline[1] + '</b></div></div>' +
+        '<p class="blurb">' + c.blurb + '</p>' + c.rows.map(function (r, j) { return rowHTML(r, sc[i][j]); }).join('') + '</section>';
+    }).join('');
+
+    var to = Math.max(0, S.start + S.bp / 100);
+    $('rFrom').textContent = f(S.start) + '%';
+    $('rTo').textContent = f(to) + '%';
+    $('dOut').textContent = (S.bp === 0 ? '0' : sgn(S.bp, 0)) + ' bp';
+    $('pricedOut').textContent = S.priced + '%';
+    Array.prototype.forEach.call($('presets').children, function (b) {
+      b.setAttribute('aria-pressed', String(Number(b.dataset.bp) === S.bp));
+    });
+
+    var sm = m.sum;
+    if (S.bp === 0 || m.s === 0) {
+      $('reading').innerHTML = S.bp === 0
+        ? 'No change to the federal funds rate, so every market stays where it started.'
+        : 'The whole move was already priced in, so markets barely react. Money market and household loan rates still follow the actual change.';
+      if (S.bp !== 0) {
+        $('reading').innerHTML += ' A new mortgage payment on $400k changes by <strong>' + usdMo(sm.mort) + '</strong>.';
+      }
+    } else {
+      var verb = S.bp > 0 ? 'hike' : 'cut';
+      $('reading').innerHTML = 'A <strong>' + Math.abs(S.bp) + ' bp ' + verb + '</strong>' + (S.priced ? ', ' + S.priced + '% already priced in' : '') +
+        ': the 10-year yield moves <strong>' + sgn(sm.dy10, 0, ' bp') + '</strong>, the broad stock market <strong>' + sgn(sm.spx, 1, '%') +
+        '</strong>, the dollar <strong>' + sgn(sm.usd, 1, '%') + '</strong>, gold <strong>' + sgn(sm.gold, 1, '%') +
+        '</strong>, and a new $400k mortgage payment <strong>' + usdMo(sm.mort) + '</strong>.';
+    }
+  }
+
+  var presetVals = [-100, -50, -25, 0, 25, 50, 100, 200];
+  $('presets').innerHTML = presetVals.map(function (v) {
+    return '<button type="button" data-bp="' + v + '" aria-pressed="false">' + (v === 0 ? '0' : sgn(v, 0)) + ' bp</button>';
+  }).join('');
+  $('presets').addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    S.bp = Number(b.dataset.bp);
+    $('bp').value = S.bp;
+    render();
+  });
+  $('bp').addEventListener('input', function (e) { S.bp = Number(e.target.value); render(); });
+  $('priced').addEventListener('input', function (e) { S.priced = Number(e.target.value); render(); });
+  $('start').addEventListener('input', function (e) {
+    var v = parseFloat(e.target.value);
+    if (isFinite(v) && v >= 0.25 && v <= 10) { S.start = v; render(); }
+  });
+  render();
+})();
+</script>
+
+</body></html>
