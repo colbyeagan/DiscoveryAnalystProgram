@@ -1,8 +1,12 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>DCF Sandbox</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
-/* Layout: a sticky answer bar (value per share), then inputs on the left and the working on the right; stacks on phones. */
+/* Layout: lesson first (idea, formula, five steps with live numbers), then a sticky answer bar over the sandbox, then a guide to every knob. */
 :root {
   --bg: #F2F4F7;
   --panel: #FFFFFF;
@@ -16,35 +20,83 @@
   --bad: #A8441F;
   --good-bg: #DDEFE6;
   --bad-bg: #F6E1D8;
+  --soft: #EAEFF5;
   --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-data: "IBM Plex Mono", ui-monospace, Menlo, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #08121E; --panel: #0F1D2E; --ink: #E8EDF4; --muted: #95A3B8; --line: #223248; --track: #1B2A40;
+    --bg: #08121E; --panel: #0F1D2E; --ink: #E8EDF4; --muted: #95A3B8; --line: #223248; --track: #1B2A40; --soft: #15243A;
     --brand: #D9B35A; --brass: #D9B35A; --good: #5FD0A0; --bad: #F0A07A; --good-bg: #123327; --bad-bg: #3A2118;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #08121E; --panel: #0F1D2E; --ink: #E8EDF4; --muted: #95A3B8; --line: #223248; --track: #1B2A40;
+  --bg: #08121E; --panel: #0F1D2E; --ink: #E8EDF4; --muted: #95A3B8; --line: #223248; --track: #1B2A40; --soft: #15243A;
   --brand: #D9B35A; --brass: #D9B35A; --good: #5FD0A0; --bad: #F0A07A; --good-bg: #123327; --bad-bg: #3A2118;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
-  font-family: var(--font-body); font-size: 15px; line-height: 1.5;
-  padding-block: 24px 56px;
+  font-family: var(--font-body); font-size: 15px; line-height: 1.55;
+  padding-block: 24px 64px;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
-body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--bg); }
-.page { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+.page { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 36px; }
 .eyebrow { font-family: var(--font-data); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--brass); }
-h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 5.5vw, 3rem); line-height: 1.05; letter-spacing: -0.02em; margin: 8px 0 0; text-wrap: balance; }
-.intro { color: var(--muted); max-width: 64ch; margin: 10px 0 0; text-wrap: pretty; }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2.2rem, 6vw, 3.4rem); line-height: 1.03; letter-spacing: -0.025em; margin: 8px 0 0; text-wrap: balance; }
+h2.sec { font-family: var(--font-display); font-weight: 600; font-size: 1.6rem; letter-spacing: -0.015em; margin: 0 0 6px; text-wrap: balance; }
+.intro { color: var(--muted); max-width: 66ch; margin: 12px 0 0; font-size: 16px; text-wrap: pretty; }
+.jump { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.jump a { font-family: var(--font-data); font-size: 12.5px; color: var(--ink); text-decoration: none; border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 5px 11px; }
+.jump a:hover { border-color: var(--brand); }
+.lead { color: var(--muted); max-width: 70ch; margin: 0 0 18px; text-wrap: pretty; }
+section { scroll-margin-top: 90px; }
+
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; min-width: 0; }
+.card h3 { font-family: var(--font-display); font-weight: 600; font-size: 1.15rem; margin: 0 0 4px; letter-spacing: -0.01em; }
+.card .sub { margin: 0 0 14px; color: var(--muted); font-size: 13.5px; max-width: 70ch; text-wrap: pretty; }
+.card p { margin: 0 0 8px; }
+.card p:last-child { margin-bottom: 0; }
+
+/* Idea */
+.ideas { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-bottom: 14px; }
+.ideas .card h3 { color: var(--brand); }
+.tv-wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 20px 32px; align-items: center; }
+.tvrows { display: flex; flex-direction: column; gap: 10px; }
+.tvrow { display: grid; grid-template-columns: 74px minmax(0, 1fr) 64px; gap: 10px; align-items: center; font-family: var(--font-data); font-size: 13px; font-variant-numeric: tabular-nums; }
+.tvrow .bar { height: 14px; background: var(--track); border-radius: 4px; overflow: hidden; }
+.tvrow .bar i { display: block; height: 100%; background: var(--brand); }
+.tvrow b { font-weight: 500; text-align: right; }
+
+/* Formula */
+.formulas { display: flex; flex-direction: column; gap: 14px; }
+.fm { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 6px 20px; align-items: center; }
+.fm .name { font-family: var(--font-data); font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.eq { font-family: var(--font-data); font-size: 15px; line-height: 2.1; overflow-x: auto; padding: 6px 12px; background: var(--soft); border-radius: 8px; white-space: nowrap; }
+.frac { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; margin: 0 4px; line-height: 1.35; }
+.frac > span:first-child { border-bottom: 1px solid var(--ink); padding: 0 6px 2px; }
+.frac > span:last-child { padding: 2px 6px 0; }
+.eq sub, .eq sup { font-size: 0.72em; line-height: 0; }
+.eq em { font-style: normal; color: var(--brass); }
+.terms { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px 24px; margin: 16px 0 0; padding: 0; }
+.terms div { border-top: 1px solid var(--line); padding-top: 8px; }
+.terms dt { font-weight: 600; }
+.terms dd { margin: 2px 0 0; color: var(--muted); font-size: 13.5px; }
+
+/* Steps */
+.steps { display: grid; gap: 12px; padding: 0; margin: 0; list-style: none; counter-reset: step; }
+.steps li { counter-increment: step; display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 4px 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px 14px 14px; }
+.steps li::before { content: counter(step); font-family: var(--font-display); font-weight: 700; font-size: 1.6rem; color: var(--brass); line-height: 1.1; text-align: center; }
+.steps .body { min-width: 0; }
+.steps h3 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; }
+.steps p { margin: 2px 0 0; color: var(--muted); font-size: 14px; max-width: 80ch; text-wrap: pretty; }
+.steps .live { margin-top: 6px; color: var(--ink); font-size: 14.5px; }
+.steps .live b { font-family: var(--font-data); font-weight: 500; font-variant-numeric: tabular-nums; background: var(--soft); padding: 1px 6px; border-radius: 4px; white-space: nowrap; }
 
 /* Answer bar */
 .answer {
@@ -60,42 +112,43 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 
 .mini b { font-family: var(--font-data); font-weight: 500; font-size: 16px; }
 .up { color: var(--good); }
 .down { color: var(--bad); }
+.sandbox { display: flex; flex-direction: column; gap: 18px; }
+
+/* Experiments */
+.exp-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.exp-btns button, .reset {
+  font-family: var(--font-body); font-weight: 600; font-size: 13.5px; padding: 8px 12px; border-radius: 8px;
+  border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer;
+}
+.exp-btns button:hover, .reset:hover { border-color: var(--brand); }
+.exp-btns button[aria-pressed="true"] { background: var(--brand); border-color: var(--brand); color: var(--panel); }
+.exp-out { margin: 0; padding: 10px 14px; border-left: 3px solid var(--brass); background: var(--soft); border-radius: 0 8px 8px 0; min-height: 3.4em; text-wrap: pretty; }
+.exp-out b { font-family: var(--font-data); font-weight: 500; }
+button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
 
 /* Main grid */
-.main { display: grid; grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.main { display: grid; grid-template-columns: minmax(280px, 350px) minmax(0, 1fr); gap: 20px; align-items: start; }
 .inputs { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 6px 18px 18px; display: flex; flex-direction: column; min-width: 0; }
-.group h2 { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; margin: 18px 0 2px; letter-spacing: -0.01em; }
+.group h3 { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; margin: 18px 0 2px; letter-spacing: -0.01em; }
 .group .sub { margin: 0 0 8px; color: var(--muted); font-size: 12.5px; }
-.field { padding: 7px 0; display: flex; flex-direction: column; gap: 2px; }
+.field { padding: 8px 0; display: flex; flex-direction: column; gap: 2px; border-top: 1px solid var(--line); }
+.field:first-of-type { border-top: 0; }
 .field .top { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
 .field label { font-size: 13.5px; font-weight: 500; }
 .field output { font-family: var(--font-data); font-size: 13.5px; font-variant-numeric: tabular-nums; color: var(--brand); }
+.field .hint { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.4; }
 input[type="range"] { width: 100%; accent-color: var(--brand); height: 24px; margin: 0; }
-input[type="number"] {
-  width: 100%; font-family: var(--font-data); font-size: 14px; padding: 6px 8px; background: var(--bg); color: var(--ink);
-  border: 1px solid var(--line); border-radius: 6px;
-}
-button:focus-visible, input:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
-.reset { margin-top: 14px; font-family: var(--font-body); font-weight: 600; font-size: 13.5px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; }
-.reset:hover { border-color: var(--brand); }
+input[type="number"] { width: 100%; font-family: var(--font-data); font-size: 14px; padding: 6px 8px; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; }
+.reset { margin-top: 14px; font-size: 13px; }
 
 .out { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
-.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; min-width: 0; }
-.card h2 { font-family: var(--font-display); font-weight: 600; font-size: 1.2rem; margin: 0 0 4px; letter-spacing: -0.01em; }
-.card .sub { margin: 0 0 14px; color: var(--muted); font-size: 13.5px; max-width: 70ch; text-wrap: pretty; }
-
-/* Rate link callout */
 .link { border-left: 3px solid var(--brass); padding: 4px 0 4px 14px; }
 .link p { margin: 0; text-wrap: pretty; }
-.link .sub { margin-top: 4px; }
-
-/* WACC build */
+.link .sub { margin: 4px 0 0; }
 .wacc { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
 .wacc div { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
 .wacc b { display: block; font-family: var(--font-data); font-weight: 500; font-size: 16px; font-variant-numeric: tabular-nums; }
 .wacc div.final { border-color: var(--brand); border-width: 2px; }
-
-/* Value bridge */
 .bridge { display: flex; height: 34px; border-radius: 6px; overflow: hidden; background: var(--track); }
 .bridge i { display: block; height: 100%; }
 .seg-a { background: var(--brand); }
@@ -103,101 +156,204 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--brass); out
 .key { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; font-size: 13px; color: var(--muted); }
 .key span b { color: var(--ink); font-family: var(--font-data); font-weight: 500; font-variant-numeric: tabular-nums; }
 .key i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
-
-/* Chart */
 .chart { width: 100%; height: auto; display: block; }
 .chart text { font-family: var(--font-data); font-size: 11px; fill: var(--muted); }
 .chart .grid { stroke: var(--line); stroke-width: 1; }
 .chart .zero { stroke: var(--muted); stroke-width: 1; }
 .chart .nom { fill: var(--track); stroke: var(--muted); stroke-width: 0.6; }
 .chart .pv { fill: var(--brand); }
-
-/* Tables */
 .scroll { overflow-x: auto; }
 table { border-collapse: collapse; width: 100%; font-family: var(--font-data); font-size: 12.5px; font-variant-numeric: tabular-nums; }
 th, td { padding: 6px 10px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
 th:first-child, td:first-child { text-align: left; font-family: var(--font-body); font-size: 13px; }
 thead th { color: var(--muted); font-weight: 500; font-size: 11.5px; letter-spacing: 0.04em; text-transform: uppercase; }
 tbody tr.total td { font-weight: 600; border-top: 1px solid var(--muted); }
-.sens th { background: transparent; }
 .sens td.good { background: var(--good-bg); }
 .sens td.bad { background: var(--bad-bg); }
 .sens td.base { outline: 2px solid var(--brand); outline-offset: -2px; font-weight: 600; }
 .sens td.na { color: var(--muted); }
 .warn { margin: 10px 0 0; color: var(--bad); font-size: 13px; }
 
+/* Knob guide */
+.gh { font-family: var(--font-display); font-weight: 600; font-size: 1.1rem; margin: 22px 0 10px; }
+.knobs { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.knob { display: flex; flex-direction: column; gap: 6px; }
+.knob h4 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 1.02rem; display: flex; justify-content: space-between; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.chip { font-family: var(--font-data); font-weight: 400; font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; }
+.knob p { margin: 0; font-size: 14px; text-wrap: pretty; }
+.knob .why { color: var(--muted); }
+.knob .typ { font-family: var(--font-data); font-size: 12px; color: var(--muted); }
+.knob .nudge { margin-top: auto; padding-top: 8px; border-top: 1px dashed var(--line); font-size: 13.5px; }
+.knob .nudge b { font-family: var(--font-data); font-weight: 500; }
+
 .foot { color: var(--muted); font-size: 12.5px; max-width: 80ch; border-top: 1px solid var(--line); padding-top: 14px; }
 .foot p { margin: 0 0 6px; }
 
-@media (max-width: 800px) {
+@media (max-width: 860px) {
   .main { grid-template-columns: minmax(0, 1fr); }
+  .tv-wrap { grid-template-columns: minmax(0, 1fr); }
+  .fm { grid-template-columns: minmax(0, 1fr); }
   .answer { padding: 10px 14px; gap: 6px 18px; }
   .val { font-size: 1.7rem; }
 }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 </style>
-
+</head>
+<body>
 <div class="page">
+
   <header>
     <div class="eyebrow">Analyst Academy</div>
     <h1>DCF Sandbox</h1>
-    <p class="intro">Forecast a company's free cash flow, discount it at the cost of capital, and see what a share is worth. Change any assumption and the value, the chart and the sensitivity table update together.</p>
+    <p class="intro">A discounted cash flow model answers one question: what is a business worth today, given the cash it will produce in the future? Read the short lesson, then change the assumptions and watch the answer move.</p>
+    <nav class="jump" aria-label="Page sections">
+      <a href="#learn">The idea</a>
+      <a href="#formula">The formula</a>
+      <a href="#steps">Five steps</a>
+      <a href="#sandbox">Sandbox</a>
+      <a href="#guide">Knob guide</a>
+    </nav>
   </header>
 
-  <section class="answer" aria-live="polite" aria-label="Valuation result">
-    <div class="big"><span class="lbl">Value per share</span><span class="val" id="vps">$0</span></div>
-    <div class="mini"><span class="lbl">vs example price</span><b id="upside">0%</b></div>
-    <div class="mini"><span class="lbl">Enterprise value</span><b id="evTop">$0m</b></div>
-    <div class="mini"><span class="lbl">WACC</span><b id="waccTop">0%</b></div>
-    <div class="mini"><span class="lbl">Terminal value share</span><b id="tvTop">0%</b></div>
+  <!-- THE IDEA -->
+  <section id="learn" aria-labelledby="learn-h">
+    <h2 class="sec" id="learn-h">What a DCF is</h2>
+    <p class="lead">A company is worth the cash it will hand to its owners over its lifetime. A DCF forecasts that cash, then shrinks each future amount back to today's money and adds it all up.</p>
+    <div class="ideas">
+      <div class="card"><h3>Value is future cash</h3><p>Revenue and earnings are steps along the way. What an owner can actually take out is the cash left after the business pays taxes and reinvests to keep growing. This is called free cash flow.</p></div>
+      <div class="card"><h3>Time shrinks money</h3><p>A dollar received in ten years is worth less than a dollar today, because today's dollar could be invested and grow. The discount rate sets how quickly future dollars shrink.</p></div>
+      <div class="card"><h3>Risk raises the discount rate</h3><p>Uncertain cash flows are worth less than safe ones. Riskier companies and higher interest rates both push the discount rate up, which pushes the value down.</p></div>
+    </div>
+    <div class="card">
+      <h3>See time shrink money</h3>
+      <p class="sub">What $100 received in the future is worth today, using the discount rate from the sandbox below.</p>
+      <div class="tv-wrap">
+        <p id="tvText"></p>
+        <div class="tvrows" id="tvRows" role="img" aria-label="Present value of 100 dollars received in years 1, 3, 5, 10 and 20"></div>
+      </div>
+    </div>
   </section>
 
-  <div class="main">
-    <aside class="inputs" aria-label="Assumptions" id="inputs"></aside>
-
-    <div class="out">
-      <section class="card">
-        <div class="link">
-          <p id="rateLink"></p>
-          <p class="sub">The risk-free rate is the base of the discount rate. This is the same channel that links Fed policy to stock prices in the Rate Cascade example.</p>
+  <!-- THE FORMULA -->
+  <section id="formula" aria-labelledby="formula-h">
+    <h2 class="sec" id="formula-h">The formula</h2>
+    <p class="lead">Five short equations cover the whole model. Each one has a matching knob in the sandbox.</p>
+    <div class="card">
+      <div class="formulas">
+        <div class="fm">
+          <div class="name">Value of the business</div>
+          <div class="eq">EV = <span>&Sigma;</span><sub>t=1&hellip;10</sub>
+            <span class="frac"><span>FCFF<sub>t</sub></span><span>(1 + WACC)<sup>t</sup></span></span>
+            + <span class="frac"><span>Terminal value</span><span>(1 + WACC)<sup>10</sup></span></span></div>
         </div>
-      </section>
-
-      <section class="card">
-        <h2>Cost of capital</h2>
-        <p class="sub">Cost of equity from CAPM, blended with the after-tax cost of debt at the target mix.</p>
-        <div class="wacc" id="wacc"></div>
-      </section>
-
-      <section class="card">
-        <h2>Where the value comes from</h2>
-        <p class="sub">Enterprise value is the present value of ten years of free cash flow plus the present value of everything after year 10.</p>
-        <div class="bridge" id="bridge" role="img" aria-label="Split of enterprise value between explicit cash flows and terminal value"></div>
-        <div class="key" id="bridgeKey"></div>
-      </section>
-
-      <section class="card">
-        <h2>Free cash flow to the firm</h2>
-        <p class="sub">Dark bars are present values. Light bars are the cash flows in the year they arrive. $ millions.</p>
-        <svg class="chart" id="chart" viewBox="0 0 640 230" role="img" aria-label="Free cash flow by year, nominal and present value"></svg>
-      </section>
-
-      <section class="card">
-        <h2>Forecast</h2>
-        <p class="sub">Growth fades in a straight line from the year-1 rate to the terminal rate. Margin moves in a straight line to the target. Reinvestment is the change in revenue divided by sales-to-capital.</p>
-        <div class="scroll"><table id="forecast"></table></div>
-      </section>
-
-      <section class="card">
-        <h2>Sensitivity: value per share</h2>
-        <p class="sub">Discount rate down the side, terminal growth across the top. Green cells are above the example price, orange cells are below it.</p>
-        <div class="scroll"><table class="sens" id="sens"></table></div>
-        <p class="warn" id="warn" hidden></p>
-      </section>
+        <div class="fm">
+          <div class="name">Cash flow each year</div>
+          <div class="eq">FCFF<sub>t</sub> = Revenue<sub>t</sub> &times; <em>Margin</em><sub>t</sub> &times; (1 &minus; <em>Tax</em>) &minus;
+            <span class="frac"><span>Revenue<sub>t</sub> &minus; Revenue<sub>t&minus;1</sub></span><span><em>Sales-to-capital</em></span></span></div>
+        </div>
+        <div class="fm">
+          <div class="name">Value after year 10</div>
+          <div class="eq">Terminal value = <span class="frac"><span>FCFF<sub>11</sub></span><span>WACC &minus; <em>g</em></span></span>
+            &nbsp;where FCFF<sub>11</sub> = Revenue<sub>11</sub> &times; Margin &times; (1 &minus; Tax) &times; (1 &minus; <span class="frac"><span><em>g</em></span><span><em>ROIC</em></span></span>)</div>
+        </div>
+        <div class="fm">
+          <div class="name">Discount rate</div>
+          <div class="eq">WACC = (1 &minus; D%) &times; <em>K</em><sub>e</sub> + D% &times; <em>K</em><sub>d</sub> &times; (1 &minus; Tax) &nbsp;where <em>K</em><sub>e</sub> = <em>Rf</em> + <em>&beta;</em> &times; <em>ERP</em> and <em>K</em><sub>d</sub> = <em>Rf</em> + <em>Spread</em></div>
+        </div>
+        <div class="fm">
+          <div class="name">Price per share</div>
+          <div class="eq">Value per share = <span class="frac"><span>EV &minus; Net debt</span><span>Shares</span></span></div>
+        </div>
+      </div>
+      <dl class="terms">
+        <div><dt>FCFF</dt><dd>Free cash flow to the firm: cash left after taxes and reinvestment, before paying lenders or shareholders.</dd></div>
+        <div><dt>EV (enterprise value)</dt><dd>What the whole business is worth, to lenders and shareholders together.</dd></div>
+        <div><dt>WACC</dt><dd>Weighted average cost of capital: the blended return that lenders and shareholders require. It is the discount rate.</dd></div>
+        <div><dt>Terminal value</dt><dd>The value of all cash flows after the forecast ends, treated as a perpetuity that grows at a steady rate.</dd></div>
+        <div><dt>Net debt</dt><dd>Borrowings minus cash. Lenders are paid first, so it comes off EV to leave the shareholders' part.</dd></div>
+        <div><dt>Reinvestment</dt><dd>Money put back into plants, equipment and working capital to support growth. It reduces free cash flow.</dd></div>
+      </dl>
     </div>
-  </div>
+  </section>
+
+  <!-- FIVE STEPS -->
+  <section id="steps" aria-labelledby="steps-h">
+    <h2 class="sec" id="steps-h">Five steps, with your numbers</h2>
+    <p class="lead">The sandbox follows these steps in order. The figures in each step come from the assumptions you set below, so they change as you move the knobs.</p>
+    <ol class="steps" id="stepList"></ol>
+  </section>
+
+  <!-- SANDBOX -->
+  <section id="sandbox" class="sandbox" aria-labelledby="sandbox-h">
+    <div>
+      <h2 class="sec" id="sandbox-h">Sandbox</h2>
+      <p class="lead">The example company is made up. Start with an experiment, or change any assumption yourself. The bar below stays on screen while you scroll.</p>
+    </div>
+
+    <div class="answer" aria-live="polite" aria-label="Valuation result">
+      <div class="big"><span class="lbl">Value per share</span><span class="val" id="vps">$0</span></div>
+      <div class="mini"><span class="lbl">vs example price</span><b id="upside">0%</b></div>
+      <div class="mini"><span class="lbl">Enterprise value</span><b id="evTop">$0m</b></div>
+      <div class="mini"><span class="lbl">WACC</span><b id="waccTop">0%</b></div>
+      <div class="mini"><span class="lbl">Terminal value share</span><b id="tvTop">0%</b></div>
+    </div>
+
+    <div class="card">
+      <h3>Try an experiment</h3>
+      <p class="sub">Each button changes one thing and tells you what to notice. Click Reset between experiments to start from the example company.</p>
+      <div class="exp-btns" id="expBtns" role="group" aria-label="Experiments"></div>
+      <p class="exp-out" id="expOut" aria-live="polite">Pick an experiment to see what happens to value per share.</p>
+    </div>
+
+    <div class="main">
+      <aside class="inputs" aria-label="Assumptions" id="inputs"></aside>
+      <div class="out">
+        <div class="card">
+          <div class="link">
+            <p id="rateLink"></p>
+            <p class="sub">The risk-free rate sits underneath the discount rate. This is the same link between Fed policy and stock prices that the Rate Cascade example shows.</p>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Cost of capital</h3>
+          <p class="sub">Cost of equity from CAPM, blended with the after-tax cost of debt at the target mix.</p>
+          <div class="wacc" id="wacc"></div>
+        </div>
+        <div class="card">
+          <h3>Where the value comes from</h3>
+          <p class="sub">Enterprise value is the present value of ten years of free cash flow plus the present value of everything after year 10.</p>
+          <div class="bridge" id="bridge" role="img" aria-label="Split of enterprise value between explicit cash flows and terminal value"></div>
+          <div class="key" id="bridgeKey"></div>
+        </div>
+        <div class="card">
+          <h3>Free cash flow to the firm</h3>
+          <p class="sub">Dark bars are present values. Light bars are the cash flows in the year they arrive. $ millions.</p>
+          <svg class="chart" id="chart" viewBox="0 0 640 230" role="img" aria-label="Free cash flow by year, nominal and present value"></svg>
+        </div>
+        <div class="card">
+          <h3>Forecast</h3>
+          <p class="sub">Growth fades in a straight line from the year-1 rate to the terminal rate. Margin moves in a straight line to the target. Reinvestment is the change in revenue divided by sales-to-capital.</p>
+          <div class="scroll"><table id="forecast"></table></div>
+        </div>
+        <div class="card">
+          <h3>Sensitivity: value per share</h3>
+          <p class="sub">Discount rate down the side, terminal growth across the top. Green cells are above the example price, orange cells are below it.</p>
+          <div class="scroll"><table class="sens" id="sens"></table></div>
+          <p class="warn" id="warn" hidden></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- KNOB GUIDE -->
+  <section id="guide" aria-labelledby="guide-h">
+    <h2 class="sec" id="guide-h">Knob guide</h2>
+    <p class="lead">What each assumption means, which part of the formula it feeds, and how much it matters right now. The nudge line on each card re-runs the model with a small increase to that one input and reports the change in value per share.</p>
+    <div id="guideBody"></div>
+  </section>
 
   <footer class="foot">
-    <p>Teaching model. The default company is made up, and the example price is arbitrary. Cash flows are discounted at year end. Terminal value uses a growing perpetuity with reinvestment of growth divided by return on capital.</p>
+    <p>Teaching model. The example company is made up, and the example price is arbitrary. Cash flows are discounted at year end. Debt share, beta and credit spread are set independently here, although in practice more debt makes both equity and debt riskier.</p>
     <p>Not investment advice and not a forecast of any real security.</p>
   </footer>
 </div>
@@ -212,43 +368,123 @@ tbody tr.total td { font-weight: 600; border-top: 1px solid var(--muted); }
     tg: 3.0, roic: 12, debt: 300, shares: 100, price: 0
   };
   var P = {};
+
   var FIELDS = [
     { g: 'Operating forecast', s: 'Growth and profitability over ten years', items: [
-      { k: 'rev', t: 'Revenue today ($m)', type: 'num', step: 10 },
-      { k: 'g1', t: 'Year 1 revenue growth', min: 0, max: 40, step: 0.5, u: '%' },
-      { k: 'm0', t: 'Operating margin today', min: 0, max: 50, step: 0.5, u: '%' },
-      { k: 'm1', t: 'Operating margin in year 10', min: 0, max: 50, step: 0.5, u: '%' },
-      { k: 'tax', t: 'Tax rate', min: 0, max: 40, step: 1, u: '%' },
-      { k: 's2c', t: 'Sales-to-capital (revenue per $1 invested)', min: 0.5, max: 5, step: 0.1, u: 'x', dp: 1 }
+      { k: 'rev', t: 'Revenue today ($m)', type: 'num', step: 10, tag: 'Cash flow', nudge: 100, nl: '+$100m',
+        h: 'Sales over the last twelve months.',
+        what: 'Sales over the last twelve months, in millions of dollars. Every future year is built from this starting point.',
+        why: 'Cash flow scales with revenue, so a bigger starting base lifts the value of the whole business. Net debt does not change, so a higher revenue lifts the per-share value by a bit more than the revenue itself.',
+        typ: 'Any size works. The model is about shape, not scale.' },
+      { k: 'g1', t: 'Year 1 revenue growth', min: 0, max: 40, step: 0.5, u: '%', tag: 'Cash flow', nudge: 2, nl: '+2 pts',
+        h: 'Fades to terminal growth by year 10.',
+        what: 'How fast revenue grows next year. The rate then fades in a straight line to the terminal growth rate by year 10.',
+        why: 'More growth means more future cash. It also costs money, because growing needs new plants and inventory. If sales-to-capital is low, fast growth can use up most of the cash it creates.',
+        typ: 'Mature firms 2 to 5%. Strong growers 8 to 15%. Early stage 20% or more.' },
+      { k: 'm0', t: 'Operating margin today', min: 0, max: 50, step: 0.5, u: '%', tag: 'Cash flow', nudge: 2, nl: '+2 pts',
+        h: 'Operating income as a share of revenue.',
+        what: 'Operating income divided by revenue. It is how many cents of profit the business keeps from each dollar of sales before tax.',
+        why: 'This sets the starting point of the margin path. It matters less than the year-10 margin, because it only affects the early years.',
+        typ: 'Grocers 3 to 5%. Industrials 10 to 15%. Software 25 to 35%.' },
+      { k: 'm1', t: 'Operating margin in year 10', min: 0, max: 50, step: 0.5, u: '%', tag: 'Cash flow', nudge: 2, nl: '+2 pts',
+        h: 'Where the margin ends up. Also sets terminal cash.',
+        what: 'The margin the business reaches by year 10. Margin moves in a straight line from today’s level to this one.',
+        why: 'One of the most powerful knobs. It lifts the late years and the terminal cash flow, and terminal value is the largest part of the answer. Analysts spend a lot of time defending this number.',
+        typ: 'Use today’s margin if you expect no improvement. Use a peer’s margin if you expect the company to catch up.' },
+      { k: 'tax', t: 'Tax rate', min: 0, max: 40, step: 1, u: '%', tag: 'Cash flow', nudge: 5, nl: '+5 pts',
+        h: 'Share of operating income paid in tax.',
+        what: 'The share of operating income paid in tax. It also makes borrowing cheaper, because interest is tax deductible.',
+        why: 'A higher rate cuts free cash flow directly. The small offset is the debt tax shield, which lowers the after-tax cost of debt.',
+        typ: 'U.S. companies often model 21 to 28%.' },
+      { k: 's2c', t: 'Sales-to-capital (revenue per $1 invested)', min: 0.5, max: 5, step: 0.1, u: 'x', dp: 1, tag: 'Cash flow', nudge: 0.5, nl: '+0.5x',
+        h: 'How capital hungry growth is.',
+        what: 'How many dollars of new revenue each dollar of new investment produces. Investment means plants, equipment and working capital.',
+        why: 'A low ratio means growth is expensive and eats free cash. A high ratio means the business can grow with little investment. It only matters while revenue is growing.',
+        typ: 'Utilities and airlines 0.5 to 1. Retailers around 2. Software 3 to 5.' }
     ]},
     { g: 'Discount rate', s: 'Built up from the risk-free rate', items: [
-      { k: 'rf', t: 'Risk-free rate (10-year Treasury)', min: 0, max: 8, step: 0.05, u: '%', dp: 2 },
-      { k: 'erp', t: 'Equity risk premium', min: 3, max: 8, step: 0.1, u: '%', dp: 1 },
-      { k: 'beta', t: 'Equity beta', min: 0.5, max: 2, step: 0.05, u: '', dp: 2 },
-      { k: 'spread', t: 'Credit spread on debt', min: 0.5, max: 6, step: 0.1, u: '%', dp: 1 },
-      { k: 'wd', t: 'Debt share of capital', min: 0, max: 60, step: 1, u: '%' }
+      { k: 'rf', t: 'Risk-free rate (10-year Treasury)', min: 0, max: 8, step: 0.05, u: '%', dp: 2, tag: 'Discount rate', nudge: 1, nl: '+1 pt (100 bp)',
+        h: 'The Treasury yield. Moves when the Fed moves.',
+        what: 'The yield on a 10-year U.S. Treasury, which is the return an investor can get with almost no risk.',
+        why: 'Every other required return is built on top of it. When it rises, the discount rate rises and every future dollar shrinks more. Cash flows far in the future shrink the most, which is why growth stocks fall hardest when rates rise.',
+        typ: 'It has ranged from under 1% to over 5% in recent years.' },
+      { k: 'erp', t: 'Equity risk premium', min: 3, max: 8, step: 0.1, u: '%', dp: 1, tag: 'Discount rate', nudge: 1, nl: '+1 pt',
+        h: 'Extra return investors demand for owning stocks.',
+        what: 'The extra annual return investors require for holding the stock market instead of Treasuries.',
+        why: 'It is multiplied by beta and added to the risk-free rate to give the cost of equity. A bigger premium means a higher discount rate and a lower value.',
+        typ: 'Most estimates are 4 to 6%.' },
+      { k: 'beta', t: 'Equity beta', min: 0.5, max: 2, step: 0.05, u: '', dp: 2, tag: 'Discount rate', nudge: 0.2, nl: '+0.2',
+        h: 'How strongly the stock moves with the market.',
+        what: 'How much the stock tends to move when the market moves. A beta of 1 moves with the market. Above 1 swings more. Below 1 swings less.',
+        why: 'It scales the equity risk premium. A more volatile business has a higher cost of equity and so a lower value.',
+        typ: 'Utilities 0.5 to 0.8. Market 1.0. Cyclical and tech businesses 1.2 to 1.6.' },
+      { k: 'spread', t: 'Credit spread on debt', min: 0.5, max: 6, step: 0.1, u: '%', dp: 1, tag: 'Discount rate', nudge: 1, nl: '+1 pt',
+        h: 'Extra yield lenders charge over Treasuries.',
+        what: 'The extra interest the company pays over the risk-free rate to borrow. Safer companies pay less.',
+        why: 'It sets the cost of debt. Its effect is modest here because debt is only part of the capital mix and interest is tax deductible.',
+        typ: 'Investment-grade 1 to 2%. High yield 3 to 6% or more.' },
+      { k: 'wd', t: 'Debt share of capital', min: 0, max: 60, step: 1, u: '%', tag: 'Discount rate', nudge: 10, nl: '+10 pts',
+        h: 'Share of funding that is borrowed.',
+        what: 'The proportion of the company’s funding that comes from debt rather than equity.',
+        why: 'Debt is cheaper than equity and its interest is tax deductible, so more debt lowers WACC and raises value in this model. In reality, more debt also makes the company riskier and raises both beta and the credit spread. The model does not link them, so treat large debt shares with caution.',
+        typ: 'Many large companies run 10 to 40%.' }
     ]},
     { g: 'Terminal value', s: 'What the business is worth after year 10', items: [
-      { k: 'tg', t: 'Terminal growth rate', min: 0, max: 5, step: 0.1, u: '%', dp: 1 },
-      { k: 'roic', t: 'Return on new capital in terminal years', min: 5, max: 40, step: 1, u: '%' }
+      { k: 'tg', t: 'Terminal growth rate', min: 0, max: 5, step: 0.1, u: '%', dp: 1, tag: 'Terminal value', nudge: 0.5, nl: '+0.5 pt',
+        h: 'Steady growth forever after year 10.',
+        what: 'The rate the business grows forever after year 10. It is also where growth fades to during the forecast.',
+        why: 'Terminal value divides by (WACC minus g), so a small change in g moves the answer a lot, especially when WACC and g are close together. It should stay at or below the long-run growth of the economy, and it must stay below WACC.',
+        typ: '2 to 3% is common. Rarely above the risk-free rate.' },
+      { k: 'roic', t: 'Return on new capital in terminal years', min: 5, max: 40, step: 1, u: '%', tag: 'Terminal value', nudge: 3, nl: '+3 pts',
+        h: 'What each new dollar invested earns after year 10.',
+        what: 'The return the business earns on each new dollar it invests after year 10. It sets how much cash must be reinvested to grow at the terminal rate, which is g divided by ROIC.',
+        why: 'If ROIC equals WACC, growth adds no value, because each dollar invested earns exactly its cost. A higher ROIC means growth is cheap and more cash is left over.',
+        typ: 'Conservative analysts set it close to WACC. Strong franchises may sustain 15% or more.' }
     ]},
     { g: 'Capital structure', s: 'Bridge from enterprise value to a share price', items: [
-      { k: 'debt', t: 'Net debt ($m)', type: 'num', step: 10 },
-      { k: 'shares', t: 'Shares outstanding (m)', type: 'num', step: 1 },
-      { k: 'price', t: 'Example share price ($)', type: 'num', step: 0.5 }
+      { k: 'debt', t: 'Net debt ($m)', type: 'num', step: 10, neg: true, tag: 'Price bridge', nudge: 100, nl: '+$100m',
+        h: 'Borrowings minus cash. Negative means net cash.',
+        what: 'Borrowings minus cash, in millions. A negative number means the company holds more cash than debt.',
+        why: 'Lenders are paid before shareholders, so net debt is subtracted from enterprise value. Each extra dollar of debt takes a dollar from the shareholders.',
+        typ: 'Check the latest balance sheet.' },
+      { k: 'shares', t: 'Shares outstanding (m)', type: 'num', step: 1, tag: 'Price bridge', nudge: 10, nl: '+10m shares',
+        h: 'Equity value is divided by this.',
+        what: 'The number of shares in millions. Equity value is split evenly across them.',
+        why: 'More shares means each slice is smaller. It does not change what the company is worth, only what one share is worth.',
+        typ: 'Use the diluted share count where you can.' },
+      { k: 'price', t: 'Example share price ($)', type: 'num', step: 0.5, tag: 'Comparison only',
+        h: 'Used only to compare against the model.',
+        what: 'A made-up market price used only to compare against the model’s value.',
+        why: 'It does not change the valuation. The gap between value and price is the investment view: a model value above the price suggests the stock is cheap, and below suggests it is expensive.',
+        typ: 'In real work, use today’s price.' }
     ]}
+  ];
+
+  var EXPERIMENTS = [
+    { id: 'rates', t: 'Interest rates rise 1 pt', set: function (p) { p.rf += 1; },
+      note: 'A higher risk-free rate raises the discount rate, so every future dollar is worth less today. Terminal value takes the biggest hit because it sits furthest in the future. This is the same channel the Rate Cascade example shows for stocks.' },
+    { id: 'growth', t: 'Growth stalls at 6%', set: function (p) { p.g1 = 6; },
+      note: 'Slower growth means less cash in the middle years and a smaller business in year 10, so the terminal cash flow is lower too. Less growth needs less reinvestment, which cushions only part of the loss. Growth is often a bigger lever than a one-point move in interest rates.' },
+    { id: 'margin', t: 'Margins never improve', set: function (p) { p.m1 = p.m0; },
+      note: 'With no margin gain, the late-year and terminal cash flows are lower. Much of a DCF’s value rests on assumed future improvement, which is why this is the first assumption analysts defend.' },
+    { id: 'tg', t: 'Terminal growth 4%', set: function (p) { p.tg = 4; },
+      note: 'One point of extra perpetual growth lifts value sharply, and the terminal share of value climbs. WACC minus g gets small, so the formula becomes very sensitive. Be skeptical of high terminal growth.' },
+    { id: 'beta', t: 'Riskier business (beta 1.6)', set: function (p) { p.beta = 1.6; },
+      note: 'A higher beta lifts the cost of equity and the whole discount rate. The cash flows are unchanged, but they are worth less because they are riskier.' },
+    { id: 'capital', t: 'Capital hungry (sales-to-capital 0.8)', set: function (p) { p.s2c = 0.8; },
+      note: 'Each dollar of growth now needs more investment, so free cash flow drops while the company is growing. Fast growth in a capital-heavy business creates less value than it appears to. Terminal value is unchanged, so it now makes up a larger share of the total.' }
   ];
 
   function wacc(p) {
     var ke = p.rf + p.beta * p.erp;
-    var kd = (p.rf + p.spread) * (1 - p.tax / 100);
+    var kd = p.rf + p.spread;
     var wd = p.wd / 100;
-    return { ke: ke, kd: kd, wacc: (1 - wd) * ke + wd * kd };
+    return { ke: ke, kd: kd * (1 - p.tax / 100), wacc: (1 - wd) * ke + wd * kd * (1 - p.tax / 100) };
   }
 
   function run(p, ov) {
-    var q = {}; for (var k in p) q[k] = p[k];
-    if (ov) for (var k2 in ov) q[k2] = ov[k2];
+    var q = {}, k; for (k in p) q[k] = p[k];
+    if (ov) for (k in ov) q[k] = ov[k];
     var w = wacc(q), r = w.wacc / 100, g = q.tg / 100, t = q.tax / 100;
     var years = [], prev = q.rev, pvSum = 0, i;
     for (i = 1; i <= 10; i++) {
@@ -270,26 +506,32 @@ tbody tr.total td { font-weight: 600; border-top: 1px solid var(--muted); }
     var pvTv = valid ? tv / Math.pow(1 + r, 10) : NaN;
     var ev = pvSum + pvTv, eq = ev - q.debt;
     var vps = q.shares > 0 ? eq / q.shares : NaN;
-    return { w: w, years: years, pvSum: pvSum, tv: tv, pvTv: pvTv, ev: ev, eq: eq, vps: vps, valid: valid, fcf11: fcf11 };
+    return { w: w, years: years, pvSum: pvSum, tv: tv, pvTv: pvTv, ev: ev, eq: eq, vps: vps, valid: valid, fcf11: fcf11, r: r };
   }
 
-  function n0(x) { return isFinite(x) ? Math.round(x).toLocaleString('en-US') : 'n/a'; }
+  function n0(x) { return isFinite(x) ? (x < 0 ? '−' : '') + Math.abs(Math.round(x)).toLocaleString('en-US') : 'n/a'; }
   function m0f(x) { return isFinite(x) ? (x < 0 ? '−' : '') + '$' + Math.abs(Math.round(x)).toLocaleString('en-US') + 'm' : 'n/a'; }
   function d2(x) { return isFinite(x) ? (x < 0 ? '−' : '') + '$' + Math.abs(x).toFixed(2) : 'n/a'; }
   function pct(x, dp) { return isFinite(x) ? x.toFixed(dp == null ? 1 : dp) + '%' : 'n/a'; }
-  function sp(x, dp) { if (!isFinite(x)) return 'n/a'; var r = Number(Math.abs(x).toFixed(dp)); return r === 0 ? '0.' + '0'.repeat(dp) + '%' : (x > 0 ? '+' : '−') + r.toFixed(dp) + '%'; }
+  function sp(x, dp) {
+    if (!isFinite(x)) return 'n/a';
+    var r = Number(Math.abs(x).toFixed(dp));
+    return r === 0 ? (0).toFixed(dp) + '%' : (x > 0 ? '+' : '−') + r.toFixed(dp) + '%';
+  }
 
   function buildInputs() {
     var h = '';
     FIELDS.forEach(function (g) {
-      h += '<div class="group"><h2>' + g.g + '</h2><p class="sub">' + g.s + '</p>';
+      h += '<div class="group"><h3>' + g.g + '</h3><p class="sub">' + g.s + '</p>';
       g.items.forEach(function (f) {
         if (f.type === 'num') {
           h += '<div class="field"><div class="top"><label for="f_' + f.k + '">' + f.t + '</label></div>' +
-            '<input type="number" id="f_' + f.k + '" step="' + f.step + '" min="0" value="' + P[f.k] + '" inputmode="decimal"></div>';
+            '<input type="number" id="f_' + f.k + '" step="' + f.step + '"' + (f.neg ? '' : ' min="0"') + ' value="' + P[f.k] + '" inputmode="decimal">' +
+            '<p class="hint">' + f.h + '</p></div>';
         } else {
           h += '<div class="field"><div class="top"><label for="f_' + f.k + '">' + f.t + '</label><output id="o_' + f.k + '" for="f_' + f.k + '"></output></div>' +
-            '<input type="range" id="f_' + f.k + '" min="' + f.min + '" max="' + f.max + '" step="' + f.step + '" value="' + P[f.k] + '"></div>';
+            '<input type="range" id="f_' + f.k + '" min="' + f.min + '" max="' + f.max + '" step="' + f.step + '" value="' + P[f.k] + '">' +
+            '<p class="hint">' + f.h + '</p></div>';
         }
       });
       h += '</div>';
@@ -299,10 +541,61 @@ tbody tr.total td { font-weight: 600; border-top: 1px solid var(--muted); }
     FIELDS.forEach(function (g) { g.items.forEach(function (f) {
       $('f_' + f.k).addEventListener('input', function (e) {
         var v = parseFloat(e.target.value);
-        if (isFinite(v)) { P[f.k] = v; render(); }
+        if (isFinite(v)) { P[f.k] = v; clearExp(); render(); }
       });
     }); });
-    $('reset').addEventListener('click', function () { initP(); syncInputs(); render(); });
+    $('reset').addEventListener('click', doReset);
+  }
+
+  function buildGuide() {
+    var h = '';
+    FIELDS.forEach(function (g) {
+      h += '<h3 class="gh">' + g.g + '</h3><div class="knobs">';
+      g.items.forEach(function (f) {
+        h += '<div class="card knob"><h4>' + f.t.replace(/ \(.*\)/, '') + '<span class="chip">' + f.tag + '</span></h4>' +
+          '<p>' + f.what + '</p><p class="why">' + f.why + '</p><p class="typ">' + f.typ + '</p>' +
+          (f.nudge != null ? '<p class="nudge">Nudge <b>' + f.nl + '</b>: <span id="n_' + f.k + '"></span></p>' : '<p class="nudge">Does not change the value. Only changes the comparison.</p>') +
+          '</div>';
+      });
+      h += '</div>';
+    });
+    $('guideBody').innerHTML = h;
+  }
+
+  function buildExperiments() {
+    $('expBtns').innerHTML = EXPERIMENTS.map(function (e) {
+      return '<button type="button" data-id="' + e.id + '" aria-pressed="false">' + e.t + '</button>';
+    }).join('') + '<button type="button" id="expReset">Reset</button>';
+    $('expBtns').addEventListener('click', function (ev) {
+      var b = ev.target.closest('button');
+      if (!b) return;
+      if (b.id === 'expReset') { doReset(); return; }
+      var e = EXPERIMENTS.filter(function (x) { return x.id === b.dataset.id; })[0];
+      var base = run(DEFAULTS_P()).vps;
+      var p = DEFAULTS_P();
+      e.set(p);
+      P = p; syncInputs();
+      var after = run(P).vps;
+      render();
+      Array.prototype.forEach.call($('expBtns').children, function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+      $('expOut').innerHTML = '<b>' + d2(base) + ' → ' + d2(after) + ' (' + sp((after / base - 1) * 100, 1) + ')</b>. ' + e.note;
+    });
+  }
+  function clearExp() {
+    Array.prototype.forEach.call($('expBtns').children, function (x) { x.setAttribute('aria-pressed', 'false'); });
+  }
+
+  var PRICE = 0;
+  function DEFAULTS_P() { var p = {}, k; for (k in DEFAULTS) p[k] = DEFAULTS[k]; p.price = PRICE; return p; }
+  function initP() {
+    var p = {}, k; for (k in DEFAULTS) p[k] = DEFAULTS[k];
+    PRICE = Math.round(run(p).vps * 0.85 * 2) / 2;
+    P = DEFAULTS_P();
+  }
+  function doReset() {
+    P = DEFAULTS_P(); syncInputs(); clearExp();
+    $('expOut').textContent = 'Pick an experiment to see what happens to value per share.';
+    render();
   }
   function syncInputs() {
     FIELDS.forEach(function (g) { g.items.forEach(function (f) { $('f_' + f.k).value = P[f.k]; }); });
@@ -310,13 +603,9 @@ tbody tr.total td { font-weight: 600; border-top: 1px solid var(--muted); }
   function labels() {
     FIELDS.forEach(function (g) { g.items.forEach(function (f) {
       if (f.type === 'num') return;
-      var v = P[f.k], dp = f.dp == null ? 0 : f.dp;
-      $('o_' + f.k).textContent = v.toFixed(dp) + (f.u || '');
+      var dp = f.dp == null ? 0 : f.dp;
+      $('o_' + f.k).textContent = P[f.k].toFixed(dp) + (f.u || '');
     }); });
-  }
-  function initP() {
-    for (var k in DEFAULTS) P[k] = DEFAULTS[k];
-    P.price = Math.round(run(P).vps * 0.85 * 2) / 2;
   }
 
   function chart(R) {
@@ -324,7 +613,7 @@ tbody tr.total td { font-weight: 600; border-top: 1px solid var(--muted); }
     var vals = R.years.map(function (y) { return y.fcf; });
     var mx = Math.max.apply(null, vals.concat([1])), mn = Math.min.apply(null, vals.concat([0]));
     var step = Math.pow(10, Math.floor(Math.log10(Math.max(mx - mn, 1) / 3)));
-    var mult = [1, 2, 2.5, 5, 10].find(function (m) { return (mx - mn) / (step * m) <= 4; }) || 10;
+    var mult = [1, 2, 2.5, 5, 10].filter(function (m) { return (mx - mn) / (step * m) <= 4; })[0] || 10;
     step = step * mult;
     var top = Math.ceil(mx / step) * step, bot = Math.floor(mn / step) * step;
     if (top === bot) top = bot + step;
@@ -373,11 +662,10 @@ tbody tr.total td { font-weight: 600; border-top: 1px solid var(--muted); }
     dw.forEach(function (a) {
       h += '<tr><td>' + pct(base + a, 2) + '</td>';
       dg.forEach(function (b) {
-        // Shift WACC by moving the risk-free rate, which shifts cost of equity and debt together.
-        var tgv = P.tg + b;
-        var w0 = wacc(P), wdw = P.wd / 100, t = 1 - P.tax / 100;
+        // Shift WACC by moving the risk-free rate, which moves cost of equity and debt together.
+        var wdw = P.wd / 100, t = 1 - P.tax / 100;
         var dRf = a / ((1 - wdw) + wdw * t);
-        var R = run(P, { rf: P.rf + dRf, tg: tgv });
+        var R = run(P, { rf: P.rf + dRf, tg: P.tg + b });
         var cls = 'na', txt = 'n/a';
         if (R.valid && isFinite(R.vps)) {
           txt = d2(R.vps);
@@ -391,10 +679,53 @@ tbody tr.total td { font-weight: 600; border-top: 1px solid var(--muted); }
     $('sens').innerHTML = h + '</tbody>';
   }
 
+  function lesson(R) {
+    // Time value of money
+    var r = R.r, yrs = [1, 3, 5, 10, 20];
+    $('tvRows').innerHTML = yrs.map(function (t) {
+      var pv = 100 / Math.pow(1 + r, t);
+      return '<div class="tvrow"><span>Year ' + t + '</span><span class="bar"><i style="width:' + pv.toFixed(1) + '%"></i></span><b>$' + pv.toFixed(2) + '</b></div>';
+    }).join('');
+    $('tvText').innerHTML = 'At a discount rate of <strong>' + pct(R.w.wacc, 2) + '</strong>, a dollar you receive in ten years is worth only <strong>' + (100 / Math.pow(1 + r, 10)).toFixed(0) + ' cents</strong> today. The further away the cash, the smaller it gets. Raise the rate and every bar gets shorter.';
+
+    // Five steps
+    var y10 = R.years[9], y1 = R.years[0];
+    var steps = [
+      ['Forecast revenue and margin',
+       'Start from today’s revenue. Grow it each year, and let the operating margin drift to its year-10 level.',
+       'Revenue goes from <b>' + m0f(P.rev) + '</b> to <b>' + m0f(y10.rev) + '</b> in year 10. Margin goes from <b>' + pct(P.m0) + '</b> to <b>' + pct(P.m1) + '</b>.'],
+      ['Turn profit into free cash flow',
+       'Take operating income, subtract tax, then subtract the money reinvested to support growth. What is left is free cash flow.',
+       'Year 1: <b>' + m0f(y1.nopat) + '</b> after tax minus <b>' + m0f(y1.reinv) + '</b> reinvested leaves <b>' + m0f(y1.fcf) + '</b>. Year 10: <b>' + m0f(y10.nopat) + '</b> minus <b>' + m0f(y10.reinv) + '</b> leaves <b>' + m0f(y10.fcf) + '</b>.'],
+      ['Set the discount rate',
+       'Blend the cost of equity and the after-tax cost of debt into one rate. This is WACC.',
+       'Cost of equity <b>' + pct(R.w.ke, 2) + '</b>, after-tax cost of debt <b>' + pct(R.w.kd, 2) + '</b>, so WACC is <b>' + pct(R.w.wacc, 2) + '</b>. The ten years of cash flows are worth <b>' + m0f(R.pvSum) + '</b> today.'],
+      ['Add the value after year 10',
+       'The business does not stop at year 10. Treat its cash flow as growing at a steady rate forever, and discount that stream back to today.',
+       R.valid ? 'Terminal value is <b>' + m0f(R.tv) + '</b> in year 10, which is <b>' + m0f(R.pvTv) + '</b> today. That is <b>' + pct(R.pvTv / R.ev * 100, 0) + '</b> of enterprise value.' : 'Terminal growth must be below WACC to give a value. Lower the growth rate or raise the discount rate.'],
+      ['Get from enterprise value to a share price',
+       'Add the two present values to get enterprise value. Subtract net debt for the shareholders’ part, then divide by the number of shares.',
+       'EV <b>' + m0f(R.ev) + '</b> minus net debt <b>' + m0f(P.debt) + '</b> is <b>' + m0f(R.eq) + '</b>. Divided by <b>' + n0(P.shares) + 'm</b> shares, that is <b>' + d2(R.vps) + '</b> per share.']
+    ];
+    $('stepList').innerHTML = steps.map(function (s) {
+      return '<li><div class="body"><h3>' + s[0] + '</h3><p>' + s[1] + '</p><p class="live">' + s[2] + '</p></div></li>';
+    }).join('');
+
+    // Knob nudges
+    FIELDS.forEach(function (g) { g.items.forEach(function (f) {
+      if (f.nudge == null) return;
+      var o = {}; o[f.k] = P[f.k] + f.nudge;
+      var R2 = run(P, o);
+      var el = $('n_' + f.k);
+      if (!R2.valid || !isFinite(R2.vps) || !isFinite(R.vps) || R.vps === 0) { el.textContent = 'no valid result at this setting.'; return; }
+      var c = (R2.vps / R.vps - 1) * 100;
+      el.innerHTML = 'value per share ' + d2(R.vps) + ' → ' + d2(R2.vps) + ' (<b class="' + (c >= 0 ? 'up' : 'down') + '">' + sp(c, 1) + '</b>)';
+    }); });
+  }
+
   function render() {
     labels();
-    var R = run(P);
-    var w = R.w;
+    var R = run(P), w = R.w;
     var tvShare = R.valid ? R.pvTv / R.ev * 100 : NaN;
     $('vps').textContent = d2(R.vps);
     var up = P.price > 0 ? (R.vps / P.price - 1) * 100 : NaN;
@@ -405,8 +736,7 @@ tbody tr.total td { font-weight: 600; border-top: 1px solid var(--muted); }
     $('tvTop').textContent = pct(tvShare, 0);
 
     var w1 = run(P, { rf: P.rf + 1 });
-    var chg = (w1.vps / R.vps - 1) * 100;
-    $('rateLink').innerHTML = 'If the risk-free rate rose <strong>100 bp</strong>, to ' + pct(P.rf + 1, 2) + ', this stock would be worth <strong>' + d2(w1.vps) + '</strong>, a change of <strong>' + sp(chg, 1) + '</strong>.';
+    $('rateLink').innerHTML = 'If the risk-free rate rose <strong>100 bp</strong>, to ' + pct(P.rf + 1, 2) + ', this stock would be worth <strong>' + d2(w1.vps) + '</strong>, a change of <strong>' + sp((w1.vps / R.vps - 1) * 100, 1) + '</strong>.';
 
     $('wacc').innerHTML = [
       ['Cost of equity', pct(w.ke, 2)],
@@ -430,11 +760,15 @@ tbody tr.total td { font-weight: 600; border-top: 1px solid var(--muted); }
     else if (P.shares <= 0) { warn.hidden = false; warn.textContent = 'Enter a share count above zero to get a per-share value.'; }
     else warn.hidden = true;
 
-    chart(R); table(R); sens();
+    chart(R); table(R); sens(); lesson(R);
   }
 
   initP();
   buildInputs();
+  buildGuide();
+  buildExperiments();
   render();
 })();
 </script>
+</body>
+</html>
