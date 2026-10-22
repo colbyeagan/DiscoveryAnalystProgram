@@ -1,0 +1,440 @@
+<title>DCF Sandbox</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a sticky answer bar (value per share), then inputs on the left and the working on the right; stacks on phones. */
+:root {
+  --bg: #F2F4F7;
+  --panel: #FFFFFF;
+  --ink: #0A1B2E;
+  --muted: #556377;
+  --line: #D5DCE6;
+  --track: #E4E9F0;
+  --brand: #0F2C4A;
+  --brass: #B48A2C;
+  --good: #1F6B4F;
+  --bad: #A8441F;
+  --good-bg: #DDEFE6;
+  --bad-bg: #F6E1D8;
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #08121E; --panel: #0F1D2E; --ink: #E8EDF4; --muted: #95A3B8; --line: #223248; --track: #1B2A40;
+    --brand: #D9B35A; --brass: #D9B35A; --good: #5FD0A0; --bad: #F0A07A; --good-bg: #123327; --bad-bg: #3A2118;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #08121E; --panel: #0F1D2E; --ink: #E8EDF4; --muted: #95A3B8; --line: #223248; --track: #1B2A40;
+  --brand: #D9B35A; --brass: #D9B35A; --good: #5FD0A0; --bad: #F0A07A; --good-bg: #123327; --bad-bg: #3A2118;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  padding-block: 24px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--bg); }
+.page { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+.eyebrow { font-family: var(--font-data); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--brass); }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 5.5vw, 3rem); line-height: 1.05; letter-spacing: -0.02em; margin: 8px 0 0; text-wrap: balance; }
+.intro { color: var(--muted); max-width: 64ch; margin: 10px 0 0; text-wrap: pretty; }
+
+/* Answer bar */
+.answer {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 18px;
+  display: flex; flex-wrap: wrap; gap: 8px 28px; align-items: center;
+  box-shadow: 0 6px 18px -12px rgba(10, 20, 40, 0.4);
+}
+.big { display: flex; flex-direction: column; }
+.lbl { font-family: var(--font-data); font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
+.val { font-family: var(--font-display); font-weight: 700; font-size: 2.1rem; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.mini { display: flex; flex-direction: column; font-variant-numeric: tabular-nums; }
+.mini b { font-family: var(--font-data); font-weight: 500; font-size: 16px; }
+.up { color: var(--good); }
+.down { color: var(--bad); }
+
+/* Main grid */
+.main { display: grid; grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.inputs { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 6px 18px 18px; display: flex; flex-direction: column; min-width: 0; }
+.group h2 { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; margin: 18px 0 2px; letter-spacing: -0.01em; }
+.group .sub { margin: 0 0 8px; color: var(--muted); font-size: 12.5px; }
+.field { padding: 7px 0; display: flex; flex-direction: column; gap: 2px; }
+.field .top { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.field label { font-size: 13.5px; font-weight: 500; }
+.field output { font-family: var(--font-data); font-size: 13.5px; font-variant-numeric: tabular-nums; color: var(--brand); }
+input[type="range"] { width: 100%; accent-color: var(--brand); height: 24px; margin: 0; }
+input[type="number"] {
+  width: 100%; font-family: var(--font-data); font-size: 14px; padding: 6px 8px; background: var(--bg); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 6px;
+}
+button:focus-visible, input:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.reset { margin-top: 14px; font-family: var(--font-body); font-weight: 600; font-size: 13.5px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; }
+.reset:hover { border-color: var(--brand); }
+
+.out { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; min-width: 0; }
+.card h2 { font-family: var(--font-display); font-weight: 600; font-size: 1.2rem; margin: 0 0 4px; letter-spacing: -0.01em; }
+.card .sub { margin: 0 0 14px; color: var(--muted); font-size: 13.5px; max-width: 70ch; text-wrap: pretty; }
+
+/* Rate link callout */
+.link { border-left: 3px solid var(--brass); padding: 4px 0 4px 14px; }
+.link p { margin: 0; text-wrap: pretty; }
+.link .sub { margin-top: 4px; }
+
+/* WACC build */
+.wacc { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+.wacc div { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+.wacc b { display: block; font-family: var(--font-data); font-weight: 500; font-size: 16px; font-variant-numeric: tabular-nums; }
+.wacc div.final { border-color: var(--brand); border-width: 2px; }
+
+/* Value bridge */
+.bridge { display: flex; height: 34px; border-radius: 6px; overflow: hidden; background: var(--track); }
+.bridge i { display: block; height: 100%; }
+.seg-a { background: var(--brand); }
+.seg-b { background: var(--brass); }
+.key { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; font-size: 13px; color: var(--muted); }
+.key span b { color: var(--ink); font-family: var(--font-data); font-weight: 500; font-variant-numeric: tabular-nums; }
+.key i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+
+/* Chart */
+.chart { width: 100%; height: auto; display: block; }
+.chart text { font-family: var(--font-data); font-size: 11px; fill: var(--muted); }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart .zero { stroke: var(--muted); stroke-width: 1; }
+.chart .nom { fill: var(--track); stroke: var(--muted); stroke-width: 0.6; }
+.chart .pv { fill: var(--brand); }
+
+/* Tables */
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-family: var(--font-data); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+th, td { padding: 6px 10px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; font-family: var(--font-body); font-size: 13px; }
+thead th { color: var(--muted); font-weight: 500; font-size: 11.5px; letter-spacing: 0.04em; text-transform: uppercase; }
+tbody tr.total td { font-weight: 600; border-top: 1px solid var(--muted); }
+.sens th { background: transparent; }
+.sens td.good { background: var(--good-bg); }
+.sens td.bad { background: var(--bad-bg); }
+.sens td.base { outline: 2px solid var(--brand); outline-offset: -2px; font-weight: 600; }
+.sens td.na { color: var(--muted); }
+.warn { margin: 10px 0 0; color: var(--bad); font-size: 13px; }
+
+.foot { color: var(--muted); font-size: 12.5px; max-width: 80ch; border-top: 1px solid var(--line); padding-top: 14px; }
+.foot p { margin: 0 0 6px; }
+
+@media (max-width: 800px) {
+  .main { grid-template-columns: minmax(0, 1fr); }
+  .answer { padding: 10px 14px; gap: 6px 18px; }
+  .val { font-size: 1.7rem; }
+}
+</style>
+
+<div class="page">
+  <header>
+    <div class="eyebrow">Analyst Academy</div>
+    <h1>DCF Sandbox</h1>
+    <p class="intro">Forecast a company's free cash flow, discount it at the cost of capital, and see what a share is worth. Change any assumption and the value, the chart and the sensitivity table update together.</p>
+  </header>
+
+  <section class="answer" aria-live="polite" aria-label="Valuation result">
+    <div class="big"><span class="lbl">Value per share</span><span class="val" id="vps">$0</span></div>
+    <div class="mini"><span class="lbl">vs example price</span><b id="upside">0%</b></div>
+    <div class="mini"><span class="lbl">Enterprise value</span><b id="evTop">$0m</b></div>
+    <div class="mini"><span class="lbl">WACC</span><b id="waccTop">0%</b></div>
+    <div class="mini"><span class="lbl">Terminal value share</span><b id="tvTop">0%</b></div>
+  </section>
+
+  <div class="main">
+    <aside class="inputs" aria-label="Assumptions" id="inputs"></aside>
+
+    <div class="out">
+      <section class="card">
+        <div class="link">
+          <p id="rateLink"></p>
+          <p class="sub">The risk-free rate is the base of the discount rate. This is the same channel that links Fed policy to stock prices in the Rate Cascade example.</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Cost of capital</h2>
+        <p class="sub">Cost of equity from CAPM, blended with the after-tax cost of debt at the target mix.</p>
+        <div class="wacc" id="wacc"></div>
+      </section>
+
+      <section class="card">
+        <h2>Where the value comes from</h2>
+        <p class="sub">Enterprise value is the present value of ten years of free cash flow plus the present value of everything after year 10.</p>
+        <div class="bridge" id="bridge" role="img" aria-label="Split of enterprise value between explicit cash flows and terminal value"></div>
+        <div class="key" id="bridgeKey"></div>
+      </section>
+
+      <section class="card">
+        <h2>Free cash flow to the firm</h2>
+        <p class="sub">Dark bars are present values. Light bars are the cash flows in the year they arrive. $ millions.</p>
+        <svg class="chart" id="chart" viewBox="0 0 640 230" role="img" aria-label="Free cash flow by year, nominal and present value"></svg>
+      </section>
+
+      <section class="card">
+        <h2>Forecast</h2>
+        <p class="sub">Growth fades in a straight line from the year-1 rate to the terminal rate. Margin moves in a straight line to the target. Reinvestment is the change in revenue divided by sales-to-capital.</p>
+        <div class="scroll"><table id="forecast"></table></div>
+      </section>
+
+      <section class="card">
+        <h2>Sensitivity: value per share</h2>
+        <p class="sub">Discount rate down the side, terminal growth across the top. Green cells are above the example price, orange cells are below it.</p>
+        <div class="scroll"><table class="sens" id="sens"></table></div>
+        <p class="warn" id="warn" hidden></p>
+      </section>
+    </div>
+  </div>
+
+  <footer class="foot">
+    <p>Teaching model. The default company is made up, and the example price is arbitrary. Cash flows are discounted at year end. Terminal value uses a growing perpetuity with reinvestment of growth divided by return on capital.</p>
+    <p>Not investment advice and not a forecast of any real security.</p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+
+  var DEFAULTS = {
+    rev: 1000, g1: 12, m0: 15, m1: 22, tax: 24, s2c: 1.5,
+    rf: 4.25, erp: 5.0, beta: 1.1, spread: 1.8, wd: 20,
+    tg: 3.0, roic: 12, debt: 300, shares: 100, price: 0
+  };
+  var P = {};
+  var FIELDS = [
+    { g: 'Operating forecast', s: 'Growth and profitability over ten years', items: [
+      { k: 'rev', t: 'Revenue today ($m)', type: 'num', step: 10 },
+      { k: 'g1', t: 'Year 1 revenue growth', min: 0, max: 40, step: 0.5, u: '%' },
+      { k: 'm0', t: 'Operating margin today', min: 0, max: 50, step: 0.5, u: '%' },
+      { k: 'm1', t: 'Operating margin in year 10', min: 0, max: 50, step: 0.5, u: '%' },
+      { k: 'tax', t: 'Tax rate', min: 0, max: 40, step: 1, u: '%' },
+      { k: 's2c', t: 'Sales-to-capital (revenue per $1 invested)', min: 0.5, max: 5, step: 0.1, u: 'x', dp: 1 }
+    ]},
+    { g: 'Discount rate', s: 'Built up from the risk-free rate', items: [
+      { k: 'rf', t: 'Risk-free rate (10-year Treasury)', min: 0, max: 8, step: 0.05, u: '%', dp: 2 },
+      { k: 'erp', t: 'Equity risk premium', min: 3, max: 8, step: 0.1, u: '%', dp: 1 },
+      { k: 'beta', t: 'Equity beta', min: 0.5, max: 2, step: 0.05, u: '', dp: 2 },
+      { k: 'spread', t: 'Credit spread on debt', min: 0.5, max: 6, step: 0.1, u: '%', dp: 1 },
+      { k: 'wd', t: 'Debt share of capital', min: 0, max: 60, step: 1, u: '%' }
+    ]},
+    { g: 'Terminal value', s: 'What the business is worth after year 10', items: [
+      { k: 'tg', t: 'Terminal growth rate', min: 0, max: 5, step: 0.1, u: '%', dp: 1 },
+      { k: 'roic', t: 'Return on new capital in terminal years', min: 5, max: 40, step: 1, u: '%' }
+    ]},
+    { g: 'Capital structure', s: 'Bridge from enterprise value to a share price', items: [
+      { k: 'debt', t: 'Net debt ($m)', type: 'num', step: 10 },
+      { k: 'shares', t: 'Shares outstanding (m)', type: 'num', step: 1 },
+      { k: 'price', t: 'Example share price ($)', type: 'num', step: 0.5 }
+    ]}
+  ];
+
+  function wacc(p) {
+    var ke = p.rf + p.beta * p.erp;
+    var kd = (p.rf + p.spread) * (1 - p.tax / 100);
+    var wd = p.wd / 100;
+    return { ke: ke, kd: kd, wacc: (1 - wd) * ke + wd * kd };
+  }
+
+  function run(p, ov) {
+    var q = {}; for (var k in p) q[k] = p[k];
+    if (ov) for (var k2 in ov) q[k2] = ov[k2];
+    var w = wacc(q), r = w.wacc / 100, g = q.tg / 100, t = q.tax / 100;
+    var years = [], prev = q.rev, pvSum = 0, i;
+    for (i = 1; i <= 10; i++) {
+      var gr = (q.g1 + (q.tg - q.g1) * (i - 1) / 9) / 100;
+      var rev = prev * (1 + gr);
+      var m = (q.m0 + (q.m1 - q.m0) * i / 10) / 100;
+      var ebit = rev * m, nopat = ebit * (1 - t);
+      var reinv = (rev - prev) / q.s2c;
+      var fcf = nopat - reinv;
+      var pv = fcf / Math.pow(1 + r, i);
+      pvSum += pv;
+      years.push({ i: i, gr: gr, rev: rev, m: m, ebit: ebit, nopat: nopat, reinv: reinv, fcf: fcf, pv: pv });
+      prev = rev;
+    }
+    var rev11 = prev * (1 + g), nopat11 = rev11 * (q.m1 / 100) * (1 - t);
+    var fcf11 = nopat11 * (1 - g / (q.roic / 100));
+    var valid = r - g > 0.004;
+    var tv = valid ? fcf11 / (r - g) : NaN;
+    var pvTv = valid ? tv / Math.pow(1 + r, 10) : NaN;
+    var ev = pvSum + pvTv, eq = ev - q.debt;
+    var vps = q.shares > 0 ? eq / q.shares : NaN;
+    return { w: w, years: years, pvSum: pvSum, tv: tv, pvTv: pvTv, ev: ev, eq: eq, vps: vps, valid: valid, fcf11: fcf11 };
+  }
+
+  function n0(x) { return isFinite(x) ? Math.round(x).toLocaleString('en-US') : 'n/a'; }
+  function m0f(x) { return isFinite(x) ? (x < 0 ? '−' : '') + '$' + Math.abs(Math.round(x)).toLocaleString('en-US') + 'm' : 'n/a'; }
+  function d2(x) { return isFinite(x) ? (x < 0 ? '−' : '') + '$' + Math.abs(x).toFixed(2) : 'n/a'; }
+  function pct(x, dp) { return isFinite(x) ? x.toFixed(dp == null ? 1 : dp) + '%' : 'n/a'; }
+  function sp(x, dp) { if (!isFinite(x)) return 'n/a'; var r = Number(Math.abs(x).toFixed(dp)); return r === 0 ? '0.' + '0'.repeat(dp) + '%' : (x > 0 ? '+' : '−') + r.toFixed(dp) + '%'; }
+
+  function buildInputs() {
+    var h = '';
+    FIELDS.forEach(function (g) {
+      h += '<div class="group"><h2>' + g.g + '</h2><p class="sub">' + g.s + '</p>';
+      g.items.forEach(function (f) {
+        if (f.type === 'num') {
+          h += '<div class="field"><div class="top"><label for="f_' + f.k + '">' + f.t + '</label></div>' +
+            '<input type="number" id="f_' + f.k + '" step="' + f.step + '" min="0" value="' + P[f.k] + '" inputmode="decimal"></div>';
+        } else {
+          h += '<div class="field"><div class="top"><label for="f_' + f.k + '">' + f.t + '</label><output id="o_' + f.k + '" for="f_' + f.k + '"></output></div>' +
+            '<input type="range" id="f_' + f.k + '" min="' + f.min + '" max="' + f.max + '" step="' + f.step + '" value="' + P[f.k] + '"></div>';
+        }
+      });
+      h += '</div>';
+    });
+    h += '<button type="button" class="reset" id="reset">Reset to the example company</button>';
+    $('inputs').innerHTML = h;
+    FIELDS.forEach(function (g) { g.items.forEach(function (f) {
+      $('f_' + f.k).addEventListener('input', function (e) {
+        var v = parseFloat(e.target.value);
+        if (isFinite(v)) { P[f.k] = v; render(); }
+      });
+    }); });
+    $('reset').addEventListener('click', function () { initP(); syncInputs(); render(); });
+  }
+  function syncInputs() {
+    FIELDS.forEach(function (g) { g.items.forEach(function (f) { $('f_' + f.k).value = P[f.k]; }); });
+  }
+  function labels() {
+    FIELDS.forEach(function (g) { g.items.forEach(function (f) {
+      if (f.type === 'num') return;
+      var v = P[f.k], dp = f.dp == null ? 0 : f.dp;
+      $('o_' + f.k).textContent = v.toFixed(dp) + (f.u || '');
+    }); });
+  }
+  function initP() {
+    for (var k in DEFAULTS) P[k] = DEFAULTS[k];
+    P.price = Math.round(run(P).vps * 0.85 * 2) / 2;
+  }
+
+  function chart(R) {
+    var W = 640, H = 230, L = 46, Rr = 10, T = 12, B = 28, pw = W - L - Rr, ph = H - T - B;
+    var vals = R.years.map(function (y) { return y.fcf; });
+    var mx = Math.max.apply(null, vals.concat([1])), mn = Math.min.apply(null, vals.concat([0]));
+    var step = Math.pow(10, Math.floor(Math.log10(Math.max(mx - mn, 1) / 3)));
+    var mult = [1, 2, 2.5, 5, 10].find(function (m) { return (mx - mn) / (step * m) <= 4; }) || 10;
+    step = step * mult;
+    var top = Math.ceil(mx / step) * step, bot = Math.floor(mn / step) * step;
+    if (top === bot) top = bot + step;
+    var y = function (v) { return T + (top - v) / (top - bot) * ph; };
+    var s = '', v;
+    for (v = bot; v <= top + 1e-9; v += step) {
+      s += '<line class="grid" x1="' + L + '" x2="' + (W - Rr) + '" y1="' + y(v).toFixed(1) + '" y2="' + y(v).toFixed(1) + '"/>' +
+        '<text x="' + (L - 6) + '" y="' + (y(v) + 3.5).toFixed(1) + '" text-anchor="end">' + n0(v) + '</text>';
+    }
+    var slot = pw / 10, bw = slot * 0.62;
+    R.years.forEach(function (d, i) {
+      var x = L + i * slot + (slot - bw) / 2;
+      var bar = function (val, cls, w, dx) {
+        var y0 = y(Math.max(val, 0)), y1 = y(Math.min(val, 0));
+        return '<rect class="' + cls + '" x="' + (x + dx).toFixed(1) + '" y="' + y0.toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + Math.max(0.5, y1 - y0).toFixed(1) + '"/>';
+      };
+      s += bar(d.fcf, 'nom', bw, 0) + bar(d.pv, 'pv', bw * 0.5, bw * 0.25);
+      s += '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (H - 8) + '" text-anchor="middle">Y' + d.i + '</text>';
+    });
+    s += '<line class="zero" x1="' + L + '" x2="' + (W - Rr) + '" y1="' + y(0).toFixed(1) + '" y2="' + y(0).toFixed(1) + '"/>';
+    $('chart').innerHTML = s;
+  }
+
+  function table(R) {
+    var rows = [
+      ['Revenue growth', function (d) { return pct(d.gr * 100); }],
+      ['Revenue', function (d) { return n0(d.rev); }],
+      ['Operating margin', function (d) { return pct(d.m * 100); }],
+      ['Operating income', function (d) { return n0(d.ebit); }],
+      ['After-tax operating income', function (d) { return n0(d.nopat); }],
+      ['Reinvestment', function (d) { return n0(-d.reinv); }],
+      ['Free cash flow', function (d) { return n0(d.fcf); }, true],
+      ['Present value', function (d) { return n0(d.pv); }]
+    ];
+    var h = '<thead><tr><th>$ millions</th>' + R.years.map(function (d) { return '<th>Y' + d.i + '</th>'; }).join('') + '</tr></thead><tbody>';
+    rows.forEach(function (r) {
+      h += '<tr' + (r[2] ? ' class="total"' : '') + '><td>' + r[0] + '</td>' + R.years.map(function (d) { return '<td>' + r[1](d) + '</td>'; }).join('') + '</tr>';
+    });
+    $('forecast').innerHTML = h + '</tbody>';
+  }
+
+  function sens() {
+    var dw = [-1, -0.5, 0, 0.5, 1], dg = [-1, -0.5, 0, 0.5, 1];
+    var base = wacc(P).wacc;
+    var h = '<thead><tr><th>WACC \\ growth</th>' + dg.map(function (d) { return '<th>' + pct(P.tg + d) + '</th>'; }).join('') + '</tr></thead><tbody>';
+    dw.forEach(function (a) {
+      h += '<tr><td>' + pct(base + a, 2) + '</td>';
+      dg.forEach(function (b) {
+        // Shift WACC by moving the risk-free rate, which shifts cost of equity and debt together.
+        var tgv = P.tg + b;
+        var w0 = wacc(P), wdw = P.wd / 100, t = 1 - P.tax / 100;
+        var dRf = a / ((1 - wdw) + wdw * t);
+        var R = run(P, { rf: P.rf + dRf, tg: tgv });
+        var cls = 'na', txt = 'n/a';
+        if (R.valid && isFinite(R.vps)) {
+          txt = d2(R.vps);
+          cls = P.price > 0 ? (R.vps >= P.price ? 'good' : 'bad') : '';
+        }
+        if (a === 0 && b === 0) cls += ' base';
+        h += '<td class="' + cls + '">' + txt + '</td>';
+      });
+      h += '</tr>';
+    });
+    $('sens').innerHTML = h + '</tbody>';
+  }
+
+  function render() {
+    labels();
+    var R = run(P);
+    var w = R.w;
+    var tvShare = R.valid ? R.pvTv / R.ev * 100 : NaN;
+    $('vps').textContent = d2(R.vps);
+    var up = P.price > 0 ? (R.vps / P.price - 1) * 100 : NaN;
+    $('upside').textContent = isFinite(up) ? sp(up, 1) : 'n/a';
+    $('upside').className = isFinite(up) ? (up >= 0 ? 'up' : 'down') : '';
+    $('evTop').textContent = m0f(R.ev);
+    $('waccTop').textContent = pct(w.wacc, 2);
+    $('tvTop').textContent = pct(tvShare, 0);
+
+    var w1 = run(P, { rf: P.rf + 1 });
+    var chg = (w1.vps / R.vps - 1) * 100;
+    $('rateLink').innerHTML = 'If the risk-free rate rose <strong>100 bp</strong>, to ' + pct(P.rf + 1, 2) + ', this stock would be worth <strong>' + d2(w1.vps) + '</strong>, a change of <strong>' + sp(chg, 1) + '</strong>.';
+
+    $('wacc').innerHTML = [
+      ['Cost of equity', pct(w.ke, 2)],
+      ['After-tax cost of debt', pct(w.kd, 2)],
+      ['Debt share', pct(P.wd, 0)],
+      ['WACC', pct(w.wacc, 2), true]
+    ].map(function (x) { return '<div' + (x[2] ? ' class="final"' : '') + '><span class="lbl">' + x[0] + '</span><b>' + x[1] + '</b></div>'; }).join('');
+
+    var evPos = R.ev > 0 && R.valid;
+    $('bridge').innerHTML = evPos ? '<i class="seg-a" style="width:' + Math.max(0, R.pvSum / R.ev * 100).toFixed(1) + '%"></i><i class="seg-b" style="width:' + Math.max(0, R.pvTv / R.ev * 100).toFixed(1) + '%"></i>' : '';
+    $('bridgeKey').innerHTML = [
+      '<span><i class="seg-a"></i>Years 1 to 10 <b>' + m0f(R.pvSum) + '</b></span>',
+      '<span><i class="seg-b"></i>Terminal value <b>' + m0f(R.pvTv) + '</b></span>',
+      '<span>Enterprise value <b>' + m0f(R.ev) + '</b></span>',
+      '<span>Less net debt <b>' + m0f(P.debt) + '</b></span>',
+      '<span>Equity value <b>' + m0f(R.eq) + '</b></span>'
+    ].join('');
+
+    var warn = $('warn');
+    if (!R.valid) { warn.hidden = false; warn.textContent = 'Terminal growth must sit below the discount rate. Lower the terminal growth rate or raise the discount rate to get a value.'; }
+    else if (P.shares <= 0) { warn.hidden = false; warn.textContent = 'Enter a share count above zero to get a per-share value.'; }
+    else warn.hidden = true;
+
+    chart(R); table(R); sens();
+  }
+
+  initP();
+  buildInputs();
+  render();
+})();
+</script>
