@@ -1,0 +1,722 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Three Statement Model</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: short lesson on how the statements connect, a sticky scoreboard, then the three statements stacked in reading order with inputs inside the rows. */
+:root {
+  --bg: #F2F4F7;
+  --panel: #FFFFFF;
+  --ink: #0A1B2E;
+  --muted: #556377;
+  --line: #D5DCE6;
+  --soft: #EAEFF5;
+  --brand: #0F2C4A;
+  --brass: #B48A2C;
+  --inp: #1D4FD6;
+  --inp-bg: #EEF3FF;
+  --good: #1F6B4F;
+  --bad: #A8441F;
+  --chg: #F6EAC8;
+  --link: #E3ECF9;
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #08121E; --panel: #0F1D2E; --ink: #E8EDF4; --muted: #95A3B8; --line: #223248; --soft: #15243A;
+    --brand: #D9B35A; --brass: #D9B35A; --inp: #8DAAFF; --inp-bg: #172845; --good: #5FD0A0; --bad: #F0A07A;
+    --chg: #3C3317; --link: #1B2D4A;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #08121E; --panel: #0F1D2E; --ink: #E8EDF4; --muted: #95A3B8; --line: #223248; --soft: #15243A;
+  --brand: #D9B35A; --brass: #D9B35A; --inp: #8DAAFF; --inp-bg: #172845; --good: #5FD0A0; --bad: #F0A07A;
+  --chg: #3C3317; --link: #1B2D4A;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.55;
+  padding-block: 24px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.page { max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; gap: 32px; }
+.eyebrow { font-family: var(--font-data); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--brass); }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2.2rem, 6vw, 3.4rem); line-height: 1.03; letter-spacing: -0.025em; margin: 8px 0 0; text-wrap: balance; }
+h2.sec { font-family: var(--font-display); font-weight: 600; font-size: 1.6rem; letter-spacing: -0.015em; margin: 0 0 6px; text-wrap: balance; }
+.intro, .lead { color: var(--muted); max-width: 68ch; margin: 12px 0 0; text-wrap: pretty; }
+.intro { font-size: 16px; }
+.lead { margin: 0 0 16px; }
+section { scroll-margin-top: 90px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; min-width: 0; }
+.card h3 { font-family: var(--font-display); font-weight: 600; font-size: 1.15rem; margin: 0 0 4px; letter-spacing: -0.01em; }
+.card p { margin: 0 0 8px; }
+.card p:last-child { margin-bottom: 0; }
+.sub { color: var(--muted); font-size: 13.5px; }
+button:focus-visible, input:focus-visible, .q:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+
+/* Lesson */
+.three { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; margin-bottom: 14px; }
+.three .card h3 { color: var(--brand); }
+.three .ask { font-weight: 600; margin-bottom: 6px; }
+.eqn { font-family: var(--font-data); font-size: 15px; background: var(--soft); border-radius: 8px; padding: 10px 14px; margin: 0 0 12px; overflow-x: auto; white-space: nowrap; }
+.eqn em { font-style: normal; color: var(--brass); }
+.links { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.links li { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; border-top: 1px solid var(--line); padding-top: 8px; font-size: 14px; }
+.links b { font-weight: 600; }
+.links span { color: var(--muted); }
+
+/* Scoreboard */
+.score {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 18px;
+  display: flex; flex-wrap: wrap; gap: 6px 28px; align-items: center;
+  box-shadow: 0 6px 18px -12px rgba(10, 20, 40, 0.4);
+}
+.lbl { font-family: var(--font-data); font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
+.mini { display: flex; flex-direction: column; font-variant-numeric: tabular-nums; }
+.mini b { font-family: var(--font-data); font-weight: 500; font-size: 17px; }
+.up { color: var(--good); }
+.down { color: var(--bad); }
+.how { color: var(--muted); font-size: 12.5px; margin-left: auto; max-width: 34ch; }
+.how b { color: var(--inp); font-weight: 600; }
+
+/* Experiments and changes */
+.exp-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.exp-btns button {
+  font-family: var(--font-body); font-weight: 600; font-size: 13.5px; padding: 8px 12px; border-radius: 8px;
+  border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer;
+}
+.exp-btns button:hover { border-color: var(--brand); }
+.exp-btns button[aria-pressed="true"] { background: var(--brand); border-color: var(--brand); color: var(--panel); }
+.exp-out { margin: 0; padding: 10px 14px; border-left: 3px solid var(--brass); background: var(--soft); border-radius: 0 8px 8px 0; text-wrap: pretty; }
+.chg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-top: 14px; }
+.chg-col h4 { margin: 0 0 6px; font-family: var(--font-data); font-weight: 500; font-size: 11.5px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
+.chg-col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 13.5px; }
+.chg-col li { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--line); padding-bottom: 3px; }
+.chg-col li span:last-child { font-family: var(--font-data); font-size: 12.5px; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.chg-col .none { color: var(--muted); font-size: 13.5px; }
+.warn { margin: 0; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--bad); color: var(--bad); font-size: 14px; }
+
+/* Statements */
+.stmt-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px 16px; flex-wrap: wrap; margin-bottom: 4px; }
+.stmt-head h3 { font-family: var(--font-display); font-weight: 600; font-size: 1.35rem; margin: 0; letter-spacing: -0.01em; }
+.stmt-head .sub { margin: 0; }
+.scroll { overflow-x: auto; margin-top: 8px; }
+table { border-collapse: collapse; width: 100%; min-width: 620px; font-variant-numeric: tabular-nums; }
+th, td { padding: 6px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+thead th { font-family: var(--font-data); font-weight: 500; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); text-align: right; white-space: nowrap; }
+thead th:first-child { text-align: left; }
+td.lab { text-align: left; font-size: 14px; position: sticky; left: 0; background: var(--panel); z-index: 1; min-width: 210px; }
+td.drv { min-width: 150px; white-space: nowrap; }
+td.num { text-align: right; font-family: var(--font-data); font-size: 13.5px; white-space: nowrap; min-width: 84px; }
+td.dlt { color: var(--muted); font-size: 12.5px; }
+tr.head td { background: var(--soft); font-family: var(--font-data); font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); padding-block: 4px; }
+tr.head td.lab { background: var(--soft); }
+tr.sub td { font-weight: 600; }
+tr.total td { font-weight: 600; border-top: 1px solid var(--ink); }
+tr.total td.num { font-size: 14px; }
+tr.memo td { color: var(--muted); font-style: italic; }
+tr.line td.lab { padding-left: 16px; }
+tr:not(.head):hover td, tr.hl td { background: var(--soft); }
+tr.link td { background: var(--link); }
+tr.hl td.lab, tr.link td.lab { background: var(--link); }
+td.num.flash { animation: flash 1.6s ease-out; }
+@keyframes flash { 0% { background: var(--chg); } 100% { background: transparent; } }
+td.num.changed { box-shadow: inset 0 -2px 0 var(--brass); }
+.lab-wrap { display: flex; align-items: center; gap: 8px; }
+.q {
+  flex: none; width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--muted); background: transparent; color: var(--muted);
+  font-family: var(--font-data); font-size: 11px; line-height: 1; padding: 0; cursor: help; display: inline-flex; align-items: center; justify-content: center;
+}
+.q:hover, .q[aria-expanded="true"] { background: var(--brand); border-color: var(--brand); color: var(--panel); }
+.drvbox { display: inline-flex; align-items: center; gap: 6px; }
+.drvbox input {
+  width: 74px; font-family: var(--font-data); font-size: 13px; padding: 3px 6px; color: var(--inp); background: var(--inp-bg);
+  border: 1px solid var(--inp); border-radius: 5px; text-align: right;
+}
+.drvbox .u { font-size: 12px; color: var(--muted); }
+.conn { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 13.5px; padding-left: 6px; }
+.conn svg { flex: none; width: 22px; height: 30px; }
+.conn svg path { stroke: var(--brass); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.check-ok { color: var(--good); }
+.check-bad { color: var(--bad); }
+
+/* Tooltip */
+#tip {
+  position: fixed; z-index: 100; width: min(340px, calc(100vw - 16px)); background: var(--ink); color: var(--bg);
+  border-radius: 10px; padding: 12px 14px; font-size: 13.5px; line-height: 1.5; box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+#tip[hidden] { display: none; }
+#tip h5 { margin: 0 0 4px; font-family: var(--font-display); font-weight: 600; font-size: 1rem; }
+#tip p { margin: 0 0 6px; }
+#tip .c { margin: 0; padding-top: 6px; border-top: 1px solid rgba(128, 140, 160, 0.5); font-size: 12.5px; opacity: 0.92; }
+#tip .c b { font-weight: 600; }
+
+.foot { color: var(--muted); font-size: 12.5px; max-width: 82ch; border-top: 1px solid var(--line); padding-top: 14px; }
+.foot p { margin: 0 0 6px; }
+
+@media (max-width: 700px) { .how { margin-left: 0; max-width: none; } }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } td.num.flash { animation: none; background: var(--chg); } }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="eyebrow">Analyst Academy</div>
+    <h1>Three Statement Model</h1>
+    <p class="intro">A company reports its finances in three linked statements. Change a number in one, and watch exactly which lines move in the other two. Hover or tap the <span aria-hidden="true">?</span> beside any line to learn what it is and where it connects.</p>
+  </header>
+
+  <section aria-labelledby="fit-h">
+    <h2 class="sec" id="fit-h">How the statements fit together</h2>
+    <p class="lead">Each statement answers a different question about the same company. They are built from the same transactions, so they have to agree.</p>
+    <div class="three">
+      <div class="card"><h3>Income statement</h3><p class="ask">Did the company make a profit this year?</p><p class="sub">Revenue minus every cost, over a period of time. It ends with net income. Profit is an accounting measure and is not the same as cash.</p></div>
+      <div class="card"><h3>Cash flow statement</h3><p class="ask">Where did cash come from, and where did it go?</p><p class="sub">Starts from net income and adjusts it to real cash movements across operations, investing and financing. It ends with the cash balance.</p></div>
+      <div class="card"><h3>Balance sheet</h3><p class="ask">What does it own and owe right now?</p><p class="sub">A snapshot at one date. Everything the company has is paid for by borrowing money or by its owners.</p></div>
+    </div>
+    <div class="card">
+      <p class="eqn">Assets = Liabilities + <em>Equity</em></p>
+      <ul class="links" aria-label="Links between the statements">
+        <li><b>Net income</b><span>is the first line of the cash flow statement and, after dividends, increases retained earnings on the balance sheet.</span></li>
+        <li><b>Ending cash</b><span>from the cash flow statement becomes the cash line on the balance sheet.</span></li>
+        <li><b>Changes in receivables, inventory, payables and the like</b><span>on the balance sheet become the working capital adjustments in operating cash flow.</span></li>
+        <li><b>Capital spending and depreciation</b><span>move property and equipment: capital spending adds to it, depreciation (an income statement expense) reduces it.</span></li>
+        <li><b>Borrowing, share issues and dividends</b><span>in financing cash flow change debt, common stock and retained earnings on the balance sheet.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section aria-labelledby="model-h">
+    <h2 class="sec" id="model-h">The model</h2>
+    <p class="lead">Blue numbers in the boxes are inputs you can change. Black numbers are calculated. Hover a row to see its connected rows in the other statements. All figures are $ millions for an invented company in its first forecast year.</p>
+
+    <div class="score" aria-live="polite" aria-label="Key results">
+      <div class="mini"><span class="lbl">Net income</span><b id="s_ni">0</b></div>
+      <div class="mini"><span class="lbl">Cash from operations</span><b id="s_cfo">0</b></div>
+      <div class="mini"><span class="lbl">Ending cash</span><b id="s_cash">0</b></div>
+      <div class="mini"><span class="lbl">Balance check</span><b id="s_bal">Balanced</b></div>
+      <div class="how">Change a <b>blue</b> input. Highlighted cells show what moved.</div>
+    </div>
+
+    <div style="height:14px"></div>
+    <div class="card">
+      <h3>Try a what-if</h3>
+      <p class="sub" style="margin-bottom:10px">Each button changes inputs and explains what to notice. Reset returns to the example company.</p>
+      <div class="exp-btns" id="expBtns" role="group" aria-label="What-if scenarios"></div>
+      <p class="exp-out" id="expOut" aria-live="polite">Pick a what-if, or change any blue input in the statements below.</p>
+      <div class="chg-grid" id="chgGrid" aria-live="polite"></div>
+    </div>
+
+    <p class="warn" id="warn" hidden style="margin-top:14px"></p>
+
+    <div style="height:18px"></div>
+    <div class="card" id="isCard">
+      <div class="stmt-head"><h3>Income statement</h3><p class="sub">Year 1, $ millions</p></div>
+      <div class="scroll"><table id="tIS"></table></div>
+    </div>
+
+    <div class="conn" aria-hidden="false" style="margin:10px 0">
+      <svg viewBox="0 0 22 30" aria-hidden="true"><path d="M11 2v22M4 17l7 8 7-8"/></svg>
+      <span>Net income carries down: it is the first line of the cash flow statement, and it adds to retained earnings.</span>
+    </div>
+
+    <div class="card" id="cfCard">
+      <div class="stmt-head"><h3>Cash flow statement</h3><p class="sub">Year 1, $ millions, indirect method</p></div>
+      <div class="scroll"><table id="tCF"></table></div>
+    </div>
+
+    <div class="conn" style="margin:10px 0">
+      <svg viewBox="0 0 22 30" aria-hidden="true"><path d="M11 2v22M4 17l7 8 7-8"/></svg>
+      <span>Ending cash carries down: it is the cash line on the balance sheet.</span>
+    </div>
+
+    <div class="card" id="bsCard">
+      <div class="stmt-head"><h3>Balance sheet</h3><p class="sub">End of year, $ millions</p></div>
+      <div class="scroll"><table id="tBS"></table></div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p>Teaching model with an invented company. Simplifications: one forecast year; taxes and interest are paid in cash in the year they arise; no tax benefit on losses; interest is charged on average debt; depreciation uses average property and equipment (half a year on new spending); intangibles do not amortize; there is no tax payable, deferred tax or leasing.</p>
+    <p>Not investment advice.</p>
+  </footer>
+</div>
+
+<div id="tip" role="tooltip" hidden></div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* ---------- Opening balance sheet (end of year 0) and prior-year figures ---------- */
+  var O = { rev: 1000, cash: 200, ar: 150, inv: 120, prepaid: 30, ppe: 600, intang: 100,
+            ap: 100, accrued: 50, debt: 450, cs: 300, re: 300 };
+  O.tca = O.cash + O.ar + O.inv + O.prepaid;
+  O.ta = O.tca + O.ppe + O.intang;
+  O.tl = O.ap + O.accrued + O.debt;
+  O.te = O.cs + O.re;
+  O.tle = O.tl + O.te;
+
+  var DEFAULTS = { gr: 12, cogs: 58, sga: 20, dep: 10, rate: 6, tax: 25,
+                   dso: 55, dio: 75, dpo: 63, prep: 3, accr: 5,
+                   capex: 10, debtIss: 0, eqIss: 0, payout: 30 };
+  var P = {};
+
+  function calc(p) {
+    var R = {};
+    R.rev = O.rev * (1 + p.gr / 100);
+    R.cogs = R.rev * p.cogs / 100;
+    R.gp = R.rev - R.cogs;
+    R.sga = R.rev * p.sga / 100;
+    R.capex = R.rev * p.capex / 100;
+    R.da = p.dep / 100 * (O.ppe + 0.5 * R.capex);
+    R.ebit = R.gp - R.sga - R.da;
+    R.int = p.rate / 100 * (O.debt + 0.5 * p.debtIss);
+    R.ebt = R.ebit - R.int;
+    R.tax = Math.max(0, R.ebt) * p.tax / 100;
+    R.ni = R.ebt - R.tax;
+    R.gm = R.gp / R.rev * 100;
+    R.nm = R.ni / R.rev * 100;
+
+    R.ar = R.rev * p.dso / 365;
+    R.inv = R.cogs * p.dio / 365;
+    R.prepaid = R.rev * p.prep / 100;
+    R.ap = R.cogs * p.dpo / 365;
+    R.accrued = R.rev * p.accr / 100;
+    R.div = Math.max(0, R.ni) * p.payout / 100;
+
+    R.cf_ni = R.ni; R.cf_da = R.da;
+    R.cf_ar = -(R.ar - O.ar); R.cf_inv = -(R.inv - O.inv); R.cf_prepaid = -(R.prepaid - O.prepaid);
+    R.cf_ap = R.ap - O.ap; R.cf_accrued = R.accrued - O.accrued;
+    R.cfo = R.cf_ni + R.cf_da + R.cf_ar + R.cf_inv + R.cf_prepaid + R.cf_ap + R.cf_accrued;
+    R.cf_capex = -R.capex; R.cfi = R.cf_capex;
+    R.cf_debt = p.debtIss; R.cf_equity = p.eqIss; R.cf_div = -R.div;
+    R.cff = R.cf_debt + R.cf_equity + R.cf_div;
+    R.cf_net = R.cfo + R.cfi + R.cff;
+    R.cf_open = O.cash;
+    R.cf_end = O.cash + R.cf_net;
+
+    R.cash = R.cf_end;
+    R.tca = R.cash + R.ar + R.inv + R.prepaid;
+    R.ppe = O.ppe + R.capex - R.da;
+    R.intang = O.intang;
+    R.ta = R.tca + R.ppe + R.intang;
+    R.debt = O.debt + p.debtIss;
+    R.tl = R.ap + R.accrued + R.debt;
+    R.cs = O.cs + p.eqIss;
+    R.re = O.re + R.ni - R.div;
+    R.te = R.cs + R.re;
+    R.tle = R.tl + R.te;
+    R.check = R.ta - R.tle;
+    return R;
+  }
+
+  /* ---------- Row definitions ---------- */
+  // fmt: 'm' money, 'p' percent. open: key on O shown in the opening column (balance sheet only).
+  var IS = [
+    { k: 'rev', t: 'Revenue', cls: 'line', drv: { k: 'gr', u: '% growth', min: -40, max: 80, step: 0.5 } },
+    { k: 'cogs', t: 'Cost of goods sold', cls: 'line', neg: true, drv: { k: 'cogs', u: '% of revenue', min: 20, max: 95, step: 0.5 } },
+    { k: 'gp', t: 'Gross profit', cls: 'sub' },
+    { k: 'sga', t: 'Selling, general and administrative', cls: 'line', neg: true, drv: { k: 'sga', u: '% of revenue', min: 0, max: 60, step: 0.5 } },
+    { k: 'da', t: 'Depreciation and amortization', cls: 'line', neg: true, drv: { k: 'dep', u: '% of avg. PP&E', min: 0, max: 40, step: 0.5 } },
+    { k: 'ebit', t: 'Operating income (EBIT)', cls: 'sub' },
+    { k: 'int', t: 'Interest expense', cls: 'line', neg: true, drv: { k: 'rate', u: '% interest rate', min: 0, max: 20, step: 0.25 } },
+    { k: 'ebt', t: 'Pre-tax income', cls: 'sub' },
+    { k: 'tax', t: 'Income tax expense', cls: 'line', neg: true, drv: { k: 'tax', u: '% tax rate', min: 0, max: 50, step: 1 } },
+    { k: 'ni', t: 'Net income', cls: 'total' },
+    { k: 'gm', t: 'Gross margin', cls: 'memo', fmt: 'p' },
+    { k: 'nm', t: 'Net margin', cls: 'memo', fmt: 'p' }
+  ];
+  var CF = [
+    { cls: 'head', t: 'Operating activities' },
+    { k: 'cf_ni', t: 'Net income', cls: 'line' },
+    { k: 'cf_da', t: 'Add back: depreciation and amortization', cls: 'line' },
+    { k: 'cf_ar', t: '(Increase) / decrease in accounts receivable', cls: 'line' },
+    { k: 'cf_inv', t: '(Increase) / decrease in inventory', cls: 'line' },
+    { k: 'cf_prepaid', t: '(Increase) / decrease in prepaid and other', cls: 'line' },
+    { k: 'cf_ap', t: 'Increase / (decrease) in accounts payable', cls: 'line' },
+    { k: 'cf_accrued', t: 'Increase / (decrease) in accrued expenses', cls: 'line' },
+    { k: 'cfo', t: 'Cash from operating activities', cls: 'sub' },
+    { cls: 'head', t: 'Investing activities' },
+    { k: 'cf_capex', t: 'Capital expenditures', cls: 'line', drv: { k: 'capex', u: '% of revenue', min: 0, max: 40, step: 0.5 } },
+    { k: 'cfi', t: 'Cash from investing activities', cls: 'sub' },
+    { cls: 'head', t: 'Financing activities' },
+    { k: 'cf_debt', t: 'Debt issued / (repaid)', cls: 'line', drv: { k: 'debtIss', u: '$m', min: -450, max: 600, step: 10 } },
+    { k: 'cf_equity', t: 'Stock issued / (repurchased)', cls: 'line', drv: { k: 'eqIss', u: '$m', min: -300, max: 400, step: 10 } },
+    { k: 'cf_div', t: 'Dividends paid', cls: 'line', drv: { k: 'payout', u: '% of net income', min: 0, max: 150, step: 5 } },
+    { k: 'cff', t: 'Cash from financing activities', cls: 'sub' },
+    { k: 'cf_net', t: 'Net change in cash', cls: 'sub' },
+    { k: 'cf_open', t: 'Cash at start of year', cls: 'line' },
+    { k: 'cf_end', t: 'Cash at end of year', cls: 'total' }
+  ];
+  var BS = [
+    { cls: 'head', t: 'Assets' },
+    { k: 'cash', t: 'Cash', cls: 'line', open: 'cash' },
+    { k: 'ar', t: 'Accounts receivable', cls: 'line', open: 'ar', drv: { k: 'dso', u: 'days of sales', min: 0, max: 150, step: 1 } },
+    { k: 'inv', t: 'Inventory', cls: 'line', open: 'inv', drv: { k: 'dio', u: 'days of COGS', min: 0, max: 200, step: 1 } },
+    { k: 'prepaid', t: 'Prepaid and other current assets', cls: 'line', open: 'prepaid', drv: { k: 'prep', u: '% of revenue', min: 0, max: 15, step: 0.5 } },
+    { k: 'tca', t: 'Total current assets', cls: 'sub', open: 'tca' },
+    { k: 'ppe', t: 'Property, plant and equipment, net', cls: 'line', open: 'ppe' },
+    { k: 'intang', t: 'Intangibles and other assets', cls: 'line', open: 'intang' },
+    { k: 'ta', t: 'Total assets', cls: 'total', open: 'ta' },
+    { cls: 'head', t: 'Liabilities' },
+    { k: 'ap', t: 'Accounts payable', cls: 'line', open: 'ap', drv: { k: 'dpo', u: 'days of COGS', min: 0, max: 150, step: 1 } },
+    { k: 'accrued', t: 'Accrued expenses', cls: 'line', open: 'accrued', drv: { k: 'accr', u: '% of revenue', min: 0, max: 20, step: 0.5 } },
+    { k: 'debt', t: 'Debt', cls: 'line', open: 'debt' },
+    { k: 'tl', t: 'Total liabilities', cls: 'sub', open: 'tl' },
+    { cls: 'head', t: 'Shareholders’ equity' },
+    { k: 'cs', t: 'Common stock and paid-in capital', cls: 'line', open: 'cs' },
+    { k: 're', t: 'Retained earnings', cls: 'line', open: 're' },
+    { k: 'te', t: 'Total shareholders’ equity', cls: 'sub', open: 'te' },
+    { k: 'tle', t: 'Total liabilities and equity', cls: 'total', open: 'tle' },
+    { k: 'check', t: 'Check: assets minus (liabilities + equity)', cls: 'memo' }
+  ];
+  var STMTS = [
+    { id: 'tIS', name: 'Income statement', rows: IS, hasOpen: false },
+    { id: 'tCF', name: 'Cash flow', rows: CF, hasOpen: false },
+    { id: 'tBS', name: 'Balance sheet', rows: BS, hasOpen: true }
+  ];
+
+  /* ---------- Plain-language explanations ---------- */
+  var TIPS = {
+    rev: ['Revenue', 'Money earned from selling products or services during the year, before any costs are deducted. Also called sales or the top line.', 'Receivables, prepaid and accrued expenses are all sized from revenue. Every profit line below it starts here.'],
+    cogs: ['Cost of goods sold', 'The direct cost of the products that were sold: materials, factory labor, freight. It is subtracted from revenue to get gross profit.', 'Inventory on the balance sheet holds costs not yet expensed. When goods sell, their cost moves from inventory to here. Accounts payable and inventory are sized from it.'],
+    gp: ['Gross profit', 'Revenue minus cost of goods sold. What is left to pay for everything else the business does. Divide by revenue to get gross margin.', 'Not carried to other statements directly. It leads to operating income.'],
+    sga: ['Selling, general and administrative', 'Everyday costs of running the business that are not tied to making a specific product: office salaries, marketing, rent, software.', 'Reduces net income, and through it, retained earnings and operating cash flow.'],
+    da: ['Depreciation and amortization', 'Spreading the cost of long-lived assets such as equipment and buildings over the years they are used. It lowers profit but no cash leaves the company this year. The cash left when the asset was bought.', 'Reduces property, plant and equipment on the balance sheet. Added back on the cash flow statement because it was never a cash cost.'],
+    ebit: ['Operating income (EBIT)', 'Profit from running the business, before interest and taxes. It lets you compare companies with different debt levels and tax situations.', 'Interest and taxes are deducted below it to reach net income.'],
+    int: ['Interest expense', 'The cost of borrowed money, charged on average debt during the year. It is the price lenders are paid for lending.', 'Reduces net income. Debt on the balance sheet drives it, and new borrowing in financing cash flow raises it.'],
+    ebt: ['Pre-tax income', 'Operating income minus interest expense. The profit that tax is calculated on.', 'Multiplied by the tax rate to give income tax expense.'],
+    tax: ['Income tax expense', 'Tax owed on pre-tax profit. In this model it is paid in cash in the same year, and a loss earns no refund.', 'Reduces net income. Because it is paid in cash, it also reduces cash.'],
+    ni: ['Net income', 'The bottom line: what is left for shareholders after every cost, interest and tax. It is profit on an accounting basis, which is not the same as cash collected.', 'The first line of the cash flow statement. After dividends, the rest is added to retained earnings on the balance sheet.'],
+    gm: ['Gross margin', 'Gross profit as a percentage of revenue. Shows how much of each sales dollar is left after the direct cost of the product.', 'A memo line, not part of the totals.'],
+    nm: ['Net margin', 'Net income as a percentage of revenue. Shows how much of each sales dollar ends up as profit.', 'A memo line, not part of the totals.'],
+
+    cf_ni: ['Net income (cash flow)', 'The cash flow statement starts with profit from the income statement, then adjusts it into cash. This is called the indirect method.', 'Comes from the bottom of the income statement.'],
+    cf_da: ['Add back: depreciation', 'Depreciation reduced profit but did not use cash, so it is added back to get closer to the real cash generated.', 'Comes from the income statement. The same amount reduces property, plant and equipment on the balance sheet.'],
+    cf_ar: ['Change in accounts receivable', 'Customers who buy on credit are counted in revenue before they pay. When receivables grow, profit includes sales whose cash has not arrived, so cash flow is lower than profit. When they shrink, the cash came in.', 'The difference between opening and ending accounts receivable on the balance sheet. A bigger increase means less cash.'],
+    cf_inv: ['Change in inventory', 'Buying or making stock uses cash before the stock is sold. A rise in inventory means cash is tied up in unsold goods, so it reduces cash flow.', 'The difference between opening and ending inventory on the balance sheet.'],
+    cf_prepaid: ['Change in prepaid and other', 'Prepaid items such as insurance or rent paid in advance are cash spent now for benefits later. A rise means more cash went out.', 'The difference between opening and ending prepaid assets on the balance sheet.'],
+    cf_ap: ['Change in accounts payable', 'When the company buys on credit and has not yet paid suppliers, the expense is recorded but the cash is still in the bank. A rise in payables therefore adds to cash flow.', 'The difference between opening and ending accounts payable on the balance sheet.'],
+    cf_accrued: ['Change in accrued expenses', 'Costs recorded but not yet paid, such as wages owed at year end. A rise means cash was kept longer, which adds to cash flow.', 'The difference between opening and ending accrued expenses on the balance sheet.'],
+    cfo: ['Cash from operating activities', 'The cash the core business generated after adjusting profit for non-cash items and working capital. Healthy companies produce operating cash flow over time. Profit without cash flow is a warning sign.', 'Feeds net change in cash, and so ending cash on the balance sheet.'],
+    cf_capex: ['Capital expenditures', 'Cash spent on long-lived assets such as machinery, buildings and technology. It is not an expense right away. It becomes an asset and is expensed gradually through depreciation.', 'Adds to property, plant and equipment on the balance sheet. Raises depreciation on the income statement.'],
+    cfi: ['Cash from investing activities', 'Cash spent on, or received from, long-term investments. Here it is only capital expenditures. A negative number usually means the company is investing for growth.', 'Feeds net change in cash.'],
+    cf_debt: ['Debt issued / (repaid)', 'New borrowing brings cash in. Repaying debt sends cash out. Brackets mean cash going out.', 'Changes debt on the balance sheet by the same amount. Changes interest expense on the income statement.'],
+    cf_equity: ['Stock issued / (repurchased)', 'Selling new shares brings cash in. Buying shares back from investors sends cash out.', 'Changes common stock and paid-in capital on the balance sheet.'],
+    cf_div: ['Dividends paid', 'Cash paid out to shareholders from profit. It is a return of money to owners, not an expense, so it does not appear on the income statement.', 'Reduces retained earnings on the balance sheet.'],
+    cff: ['Cash from financing activities', 'Cash raised from, or returned to, lenders and shareholders.', 'Feeds net change in cash.'],
+    cf_net: ['Net change in cash', 'Operating plus investing plus financing cash flow. How much the company’s cash balance rose or fell during the year.', 'Added to opening cash to get ending cash.'],
+    cf_open: ['Cash at start of year', 'The cash balance at the end of the prior year.', 'Comes from the opening balance sheet.'],
+    cf_end: ['Cash at end of year', 'Opening cash plus the net change in cash. This is the figure that must match the cash line on the balance sheet.', 'Becomes cash on the balance sheet.'],
+
+    cash: ['Cash', 'Money in the bank and other cash-like holdings. The most flexible asset: it pays bills, funds growth and covers surprises.', 'Equals ending cash from the cash flow statement. This link is what ties the three statements together.'],
+    ar: ['Accounts receivable', 'Money customers owe for goods or services already delivered on credit. The input is days of sales: how many days of revenue are still uncollected.', 'Sized from revenue. A bigger balance uses cash, shown in operating cash flow.'],
+    inv: ['Inventory', 'Goods held for sale, plus materials and partly finished goods. The input is days of cost of goods sold held on the shelf.', 'Sized from cost of goods sold. A bigger balance uses cash, shown in operating cash flow.'],
+    prepaid: ['Prepaid and other current assets', 'Costs paid in advance for future benefit, such as insurance or rent.', 'Sized from revenue. A bigger balance uses cash, shown in operating cash flow.'],
+    tca: ['Total current assets', 'Assets expected to turn into cash within a year.', 'Part of total assets.'],
+    ppe: ['Property, plant and equipment, net', 'Long-lived physical assets such as factories, machinery and buildings, shown after subtracting accumulated depreciation.', 'Opening balance, plus capital expenditures from the cash flow statement, minus depreciation from the income statement.'],
+    intang: ['Intangibles and other assets', 'Non-physical assets such as brands, patents and goodwill, plus other long-term holdings. Held flat in this model.', 'No links in this model.'],
+    ta: ['Total assets', 'Everything the company owns that has economic value. It must equal liabilities plus equity.', 'Compared with total liabilities and equity in the balance check.'],
+    ap: ['Accounts payable', 'Money the company owes suppliers for goods or services already received. The input is days of cost of goods sold it takes to pay.', 'Sized from cost of goods sold. A bigger balance holds cash in the company, shown in operating cash flow.'],
+    accrued: ['Accrued expenses', 'Costs the company has incurred but not yet paid, such as wages, utilities and interest.', 'Sized from revenue. A bigger balance holds cash in the company, shown in operating cash flow.'],
+    debt: ['Debt', 'Money borrowed from banks or bondholders that must be repaid with interest.', 'Opening debt plus new borrowing (or minus repayment) from the cash flow statement. It drives interest expense.'],
+    tl: ['Total liabilities', 'Everything the company owes to outsiders.', 'Added to equity to get total liabilities and equity.'],
+    cs: ['Common stock and paid-in capital', 'Money shareholders have invested directly in the company by buying shares.', 'Opening balance plus stock issued, minus stock repurchased, from the cash flow statement.'],
+    re: ['Retained earnings', 'Profit the company has kept and reinvested over its life, rather than paid out as dividends.', 'Opening balance plus net income from the income statement, minus dividends from the cash flow statement.'],
+    te: ['Total shareholders’ equity', 'What belongs to the owners: assets minus liabilities. It is the book value of the company.', 'Added to total liabilities to get total liabilities and equity.'],
+    tle: ['Total liabilities and equity', 'How the assets are financed: by borrowing or by the owners. It always equals total assets.', 'Compared with total assets in the balance check.'],
+    check: ['Balance check', 'Total assets minus total liabilities and equity. It should always be zero. If it is not, a line was recorded on one side of the books and not the other.', 'The model builds every line from the other statements, so this stays at zero.']
+  };
+
+  // Rows linked across statements, highlighted on hover.
+  var LINK_PAIRS = [
+    ['rev','ar'],['rev','prepaid'],['rev','accrued'],['rev','cf_capex'],
+    ['cogs','inv'],['cogs','ap'],
+    ['da','cf_da'],['da','ppe'],['ni','cf_ni'],['ni','re'],
+    ['ar','cf_ar'],['inv','cf_inv'],['prepaid','cf_prepaid'],['ap','cf_ap'],['accrued','cf_accrued'],
+    ['cf_capex','ppe'],['cf_debt','debt'],['cf_debt','int'],['debt','int'],['cf_equity','cs'],['cf_div','re'],
+    ['cf_end','cash'],['cfo','cf_net'],['cfi','cf_net'],['cff','cf_net'],['cf_open','cf_end'],['cf_net','cf_end'],
+    ['ta','tle'],['ta','check'],['tle','check']
+  ];
+  var LINKS = {};
+  LINK_PAIRS.forEach(function (p) {
+    (LINKS[p[0]] = LINKS[p[0]] || []).push(p[1]);
+    (LINKS[p[1]] = LINKS[p[1]] || []).push(p[0]);
+  });
+
+  /* ---------- Formatting ---------- */
+  function money(x, neg) {
+    if (!isFinite(x)) return 'n/a';
+    if (Math.abs(x) < 0.05) return '–';
+    var s = Math.abs(x).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    return x < 0 ? '(' + s + ')' : s;
+  }
+  function pctf(x) { return isFinite(x) ? x.toFixed(1) + '%' : 'n/a'; }
+  function delta(d, fmt) {
+    if (!isFinite(d) || Math.abs(d) < 0.05) return '–';
+    var s = Math.abs(d).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    return (d > 0 ? '+' : '−') + s + (fmt === 'p' ? ' pts' : '');
+  }
+  // Statement rows store expenses as positive in R, shown negative.
+  function shown(row, R) {
+    var v = R[row.k];
+    return row.neg ? -v : v;
+  }
+
+  /* ---------- Build tables once ---------- */
+  function buildTable(S) {
+    var h = '<thead><tr><th>Line item</th><th>Input</th>' + (S.hasOpen ? '<th>Opening</th>' : '') + '<th>Year 1</th><th>vs. example</th></tr></thead><tbody>';
+    S.rows.forEach(function (r) {
+      var cols = S.hasOpen ? 5 : 4;
+      if (r.cls === 'head') { h += '<tr class="head"><td colspan="' + (cols + 0) + '" class="lab">' + r.t + '</td></tr>'; return; }
+      var drvCell = '<td class="drv"></td>';
+      if (r.drv) {
+        var d = r.drv;
+        drvCell = '<td class="drv"><span class="drvbox"><input type="number" id="f_' + d.k + '" min="' + d.min + '" max="' + d.max + '" step="' + d.step + '" inputmode="decimal" aria-label="' + r.t + ': ' + d.u + '"><span class="u">' + d.u + '</span></span></td>';
+      }
+      h += '<tr class="' + r.cls + '" data-k="' + r.k + '">' +
+        '<td class="lab"><span class="lab-wrap"><span>' + r.t + '</span><button type="button" class="q" data-k="' + r.k + '" aria-label="What is ' + r.t.replace(/"/g, '') + '?" aria-expanded="false">?</button></span></td>' +
+        drvCell +
+        (S.hasOpen ? '<td class="num">' + (r.open ? money(O[r.open]) : '') + '</td>' : '') +
+        '<td class="num" id="v_' + r.k + '"></td><td class="num dlt" id="d_' + r.k + '"></td></tr>';
+    });
+    $(S.id).innerHTML = h + '</tbody>';
+  }
+
+  var ALLROWS = [];
+  STMTS.forEach(function (S) { S.rows.forEach(function (r) { if (r.k) { r.stmt = S.name; ALLROWS.push(r); } }); });
+
+  /* ---------- State ---------- */
+  var BASE = null;       // example company results
+  var CUR = null;        // current results
+  function setP(src) { P = {}; for (var k in src) P[k] = src[k]; }
+
+  function paint(prev) {
+    var changedKeys = {};
+    ALLROWS.forEach(function (r) {
+      var el = $('v_' + r.k), dl = $('d_' + r.k);
+      var v = shown(r, CUR), b = shown(r, BASE);
+      var isP = r.fmt === 'p';
+      el.textContent = r.k === 'check' ? (Math.abs(v) < 0.0005 ? '– ✓' : money(v)) : (isP ? pctf(v) : money(v));
+      if (r.k === 'check') el.className = 'num ' + (Math.abs(v) < 0.0005 ? 'check-ok' : 'check-bad');
+      var d = v - b;
+      dl.textContent = r.k === 'check' ? '' : delta(d, r.fmt);
+      el.classList.toggle('changed', Math.abs(d) >= 0.05 && r.k !== 'check');
+      if (prev && Math.abs(shown(r, CUR) - shown(r, prev)) >= 0.05) {
+        changedKeys[r.k] = true;
+        el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+      }
+    });
+    return changedKeys;
+  }
+
+  function scoreboard() {
+    $('s_ni').textContent = money(CUR.ni);
+    $('s_cfo').textContent = money(CUR.cfo);
+    $('s_cash').textContent = money(CUR.cash);
+    $('s_cash').className = CUR.cash < 0 ? 'down' : '';
+    var ok = Math.abs(CUR.check) < 0.0005;
+    $('s_bal').textContent = ok ? 'Balanced ✓' : 'Off by ' + money(CUR.check);
+    $('s_bal').className = ok ? 'up' : 'down';
+    var w = $('warn');
+    if (CUR.cash < 0) {
+      w.hidden = false;
+      w.textContent = 'Cash is negative (' + money(CUR.cash) + '). A real company could not end the year like this. It would have to borrow, sell shares or cut spending. Try raising debt issued in the financing section.';
+    } else w.hidden = true;
+  }
+
+  function feed(prev) {
+    var g = $('chgGrid');
+    if (!prev) { g.innerHTML = ''; return; }
+    var groups = {};
+    STMTS.forEach(function (S) { groups[S.name] = []; });
+    ALLROWS.forEach(function (r) {
+      if (r.fmt === 'p' || r.k === 'check') return;
+      var a = shown(r, prev), b = shown(r, CUR);
+      if (Math.abs(b - a) >= 0.05) groups[r.stmt].push({ t: r.t, a: a, b: b, d: Math.abs(b - a) });
+    });
+    var total = 0, h = '';
+    STMTS.forEach(function (S) {
+      var list = groups[S.name].sort(function (x, y) { return y.d - x.d; });
+      total += list.length;
+      h += '<div class="chg-col"><h4>' + S.name + ': ' + list.length + ' line' + (list.length === 1 ? '' : 's') + ' changed</h4>';
+      if (!list.length) h += '<p class="none">Nothing moved.</p>';
+      else {
+        h += '<ul>' + list.slice(0, 6).map(function (x) {
+          return '<li><span>' + x.t + '</span><span>' + money(x.a) + ' → ' + money(x.b) + '</span></li>';
+        }).join('') + '</ul>';
+        if (list.length > 6) h += '<p class="none">and ' + (list.length - 6) + ' more, highlighted in the table.</p>';
+      }
+      h += '</div>';
+    });
+    g.innerHTML = total ? h : '';
+  }
+
+  function render(prev) {
+    CUR = calc(P);
+    paint(prev);
+    scoreboard();
+    feed(prev);
+  }
+
+  function syncInputs() {
+    ALLROWS.forEach(function (r) { if (r.drv) $('f_' + r.drv.k).value = P[r.drv.k]; });
+  }
+
+  function clearExp() {
+    Array.prototype.forEach.call($('expBtns').children, function (x) { x.setAttribute('aria-pressed', 'false'); });
+  }
+
+  function wireInputs() {
+    ALLROWS.forEach(function (r) {
+      if (!r.drv) return;
+      var d = r.drv, el = $('f_' + d.k);
+      el.addEventListener('input', function () {
+        var v = parseFloat(el.value);
+        if (!isFinite(v)) return;
+        v = Math.min(d.max, Math.max(d.min, v));
+        var prev = CUR;
+        P[d.k] = v; clearExp();
+        $('expOut').textContent = 'You changed ' + r.t + ' (' + d.u + ') to ' + v + '. See what moved below and in the highlighted cells.';
+        render(prev);
+      });
+      el.addEventListener('change', function () { el.value = P[d.k]; });
+    });
+  }
+
+  /* ---------- What-ifs ---------- */
+  var EXPS = [
+    { t: 'Customers pay 20 days slower', set: function (p) { p.dso += 20; },
+      note: 'Net income does not change at all, because the sales still happened. But accounts receivable grows, so operating cash flow and ending cash fall by the same amount. Profit and cash are different things.' },
+    { t: 'Build a new plant (capex 25% of revenue)', set: function (p) { p.capex = 25; },
+      note: 'Capital spending is not an expense, so net income barely moves, only a little extra depreciation. But cash from investing drops sharply, ending cash falls, and property, plant and equipment on the balance sheet rises by the same spend.' },
+    { t: 'Costs rise (COGS 63% of revenue)', set: function (p) { p.cogs = 63; },
+      note: 'Gross profit and net income fall. Retained earnings grow by less, and cash falls by almost as much. Lower cost of goods sold also shrinks inventory and payables slightly, which softens the cash hit a little.' },
+    { t: 'Borrow $200m', set: function (p) { p.debtIss = 200; },
+      note: 'Cash and debt both rise by 200, so the balance sheet still balances. Net income dips slightly, because interest is charged on average debt. Borrowing is financing cash flow, not income.' },
+    { t: 'Pay out 80% of profit as dividends', set: function (p) { p.payout = 80; },
+      note: 'The income statement does not change at all, because dividends are not an expense. Cash falls and retained earnings are reduced by the same amount, so the balance sheet still balances.' },
+    { t: 'Buy back $100m of stock', set: function (p) { p.eqIss = -100; },
+      note: 'The income statement does not change. Cash falls by 100 in financing, and common stock falls by 100 on the balance sheet. The company has returned money to owners by shrinking their stake.' }
+  ];
+  function buildExps() {
+    $('expBtns').innerHTML = EXPS.map(function (e, i) { return '<button type="button" data-i="' + i + '" aria-pressed="false">' + e.t + '</button>'; }).join('') +
+      '<button type="button" id="expReset">Reset</button>';
+    $('expBtns').addEventListener('click', function (ev) {
+      var b = ev.target.closest('button');
+      if (!b) return;
+      var prev = CUR;
+      if (b.id === 'expReset') {
+        setP(DEFAULTS); syncInputs(); clearExp();
+        $('expOut').textContent = 'Back to the example company.';
+        render(prev); return;
+      }
+      var e = EXPS[Number(b.dataset.i)];
+      setP(DEFAULTS); e.set(P); syncInputs();
+      Array.prototype.forEach.call($('expBtns').children, function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+      $('expOut').textContent = e.note;
+      render(CUR === prev ? prev : prev);
+      // Compare against the example company so the feed shows what this scenario changed.
+      feed(BASE);
+      var any = {};
+      ALLROWS.forEach(function (r) {
+        var el = $('v_' + r.k);
+        if (Math.abs(shown(r, CUR) - shown(r, BASE)) >= 0.05) { el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
+      });
+    });
+  }
+
+  /* ---------- Tooltips and linked-row highlight ---------- */
+  var tip = $('tip'), pinned = null;
+  function showTip(btn) {
+    var t = TIPS[btn.dataset.k];
+    if (!t) return;
+    tip.innerHTML = '<h5>' + t[0] + '</h5><p>' + t[1] + '</p><p class="c"><b>Connects to:</b> ' + t[2] + '</p>';
+    tip.hidden = false;
+    var r = btn.getBoundingClientRect(), w = tip.offsetWidth, hgt = tip.offsetHeight;
+    var left = Math.min(window.innerWidth - w - 8, Math.max(8, r.left + r.width / 2 - w / 2));
+    var top = r.bottom + 8;
+    if (top + hgt > window.innerHeight - 8) top = Math.max(8, r.top - hgt - 8);
+    tip.style.left = left + 'px'; tip.style.top = top + 'px';
+    btn.setAttribute('aria-describedby', 'tip');
+  }
+  function hideTip() {
+    tip.hidden = true;
+    Array.prototype.forEach.call(document.querySelectorAll('.q'), function (b) { b.removeAttribute('aria-describedby'); b.setAttribute('aria-expanded', 'false'); });
+    pinned = null;
+  }
+  document.addEventListener('mouseover', function (e) {
+    var b = e.target.closest && e.target.closest('.q');
+    if (b && !pinned) showTip(b);
+  });
+  document.addEventListener('mouseout', function (e) {
+    var b = e.target.closest && e.target.closest('.q');
+    if (b && !pinned) hideTip();
+  });
+  document.addEventListener('focusin', function (e) {
+    var b = e.target.closest && e.target.closest('.q');
+    if (b && !pinned) showTip(b);
+  });
+  document.addEventListener('focusout', function (e) {
+    var b = e.target.closest && e.target.closest('.q');
+    if (b && !pinned) hideTip();
+  });
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('.q');
+    if (b) {
+      if (pinned === b) { hideTip(); return; }
+      hideTip(); pinned = b; b.setAttribute('aria-expanded', 'true'); showTip(b);
+      return;
+    }
+    if (pinned) hideTip();
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hideTip(); });
+  window.addEventListener('scroll', function () { if (!tip.hidden) hideTip(); }, { passive: true });
+
+  function clearHL() {
+    Array.prototype.forEach.call(document.querySelectorAll('tr.hl, tr.link'), function (tr) { tr.classList.remove('hl'); tr.classList.remove('link'); });
+  }
+  function hl(tr) {
+    clearHL();
+    var k = tr.dataset.k;
+    if (!k) return;
+    tr.classList.add('hl');
+    (LINKS[k] || []).forEach(function (o) {
+      var t = document.querySelector('tr[data-k="' + o + '"]');
+      if (t) t.classList.add('link');
+    });
+  }
+  ['tIS', 'tCF', 'tBS'].forEach(function (id) {
+    var t = $(id);
+    t.addEventListener('mouseover', function (e) { var tr = e.target.closest('tr[data-k]'); if (tr) hl(tr); });
+    t.addEventListener('focusin', function (e) { var tr = e.target.closest('tr[data-k]'); if (tr) hl(tr); });
+    t.addEventListener('mouseleave', clearHL);
+  });
+
+  /* ---------- Start ---------- */
+  setP(DEFAULTS);
+  STMTS.forEach(buildTable);
+  syncInputs();
+  wireInputs();
+  buildExps();
+  BASE = calc(DEFAULTS);
+  CUR = BASE;
+  render(null);
+})();
+</script>
+</body>
+</html>
